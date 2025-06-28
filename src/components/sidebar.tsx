@@ -11,7 +11,7 @@ import { BarChart3, CreditCard, FileText, Home, Mail, Settings, Tag, Menu, X } f
 const navItems = [
   {
     name: "Dashboard",
-    href: "/",
+    href: "/dashboard",
     icon: Home,
   },
   {
@@ -23,11 +23,6 @@ const navItems = [
     name: "Categories",
     href: "/categories",
     icon: Tag,
-  },
-  {
-    name: "Email Parser",
-    href: "/email-parser",
-    icon: Mail,
   },
   {
     name: "Analytics",
@@ -66,7 +61,7 @@ export default function Sidebar() {
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between px-4 py-4 border-b">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/dashboard" className="flex items-center space-x-2">
               <FileText className="h-6 w-6 text-primary" />
               <span className="text-xl font-bold">FinanceAI</span>
             </Link>
