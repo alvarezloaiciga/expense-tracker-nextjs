@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
-import { BarChart3, CreditCard, FileText, Home, Mail, Settings, Tag, Menu, X } from "lucide-react"
+import { BarChart3, CreditCard, FileText, Home, Settings, Tag, Menu, X, LogOut, User } from "lucide-react"
+import { useAuth } from "@/hooks/useAuth"
 
 const navItems = [
   {
@@ -39,6 +40,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const { user, logout, isLoading, error } = useAuth()
 
   return (
     <>
@@ -88,8 +90,72 @@ export default function Sidebar() {
             ))}
           </nav>
 
-          <div className="border-t p-4 hidden md:block">
-            <ModeToggle />
+          {/* User section */}
+          <div className="border-t p-4 space-y-4">
+            <div className="hidden md:block">
+              <ModeToggle />
+            </div>
+            
+            {!isLoading && user && !error && (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 px-2">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {user.name || 'User'}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  className="w-full justify-start text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="mr-3 h-4 w-4" />
+                  Sign out
+                </Button>
+              </div>
+            )}
+
+            {!isLoading && !user && (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 px-2">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Not signed in
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Please log in to continue
+                    </p>
+                  </div>
+                </div>
+                
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-muted-foreground hover:text-foreground"
+                  >
+                    <LogOut className="mr-3 h-4 w-4" />
+                    Sign in
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { SignupForm } from '@/components/forms/SignupForm';
+import Link from 'next/link';
 
 export default function SignupPage() {
   return (
@@ -14,6 +15,14 @@ export default function SignupPage() {
         </div>
         <div className="bg-white py-8 px-6 shadow rounded-lg">
           <SignupForm />
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link href="/" className="font-medium text-blue-600 hover:text-blue-500">
+                Sign in here
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

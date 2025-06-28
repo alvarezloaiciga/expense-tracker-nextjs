@@ -20,19 +20,24 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Helper function to set token in both localStorage and cookies
+const setAuthToken = (token: string) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('auth-token', token);
+    // Set cookie with 7 days expiry - ensure it's accessible to middleware
+    document.cookie = `auth-token=${token}; max-age=${7 * 24 * 60 * 60}; path=/;`;
+  }
+};
+
 export async function login(email: string, password: string): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>('/api/login', { email, password });
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('auth-token', data.token);
-  }
+  setAuthToken(data.token);
   return data;
 }
 
 export async function signup(email: string, password: string): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>('/api/signup', { email, password });
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('auth-token', data.token);
-  }
+  setAuthToken(data.token);
   return data;
 }
 
@@ -44,6 +49,8 @@ export async function getCurrentUser(): Promise<User> {
 export function logout() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('auth-token');
+    // Clear cookie with same path
+    document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
   }
 }
 
