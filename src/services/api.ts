@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AuthResponse, User } from '@/types';
+import type { AuthResponse, User, CreditCard } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -46,6 +46,26 @@ export async function getCurrentUser(): Promise<User> {
   return data;
 }
 
+// --- Credit Cards API ---
+export async function getCreditCards(): Promise<CreditCard[]> {
+  const { data } = await api.get<CreditCard[]>('/api/credit_cards');
+  return data;
+}
+
+export async function createCreditCard(card: Omit<CreditCard, 'id'>): Promise<CreditCard> {
+  const { data } = await api.post<CreditCard>('/api/credit_cards', card);
+  return data;
+}
+
+export async function updateCreditCard(card: CreditCard): Promise<CreditCard> {
+  const { data } = await api.put<CreditCard>(`/api/credit_cards/${card.id}`, card);
+  return data;
+}
+
+export async function deleteCreditCard(id: number): Promise<void> {
+  await api.delete(`/api/credit_cards/${id}`);
+}
+
 export function logout() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('auth-token');
@@ -58,5 +78,9 @@ export default {
   login,
   signup,
   getCurrentUser,
+  getCreditCards,
+  createCreditCard,
+  updateCreditCard,
+  deleteCreditCard,
   logout,
 }; 

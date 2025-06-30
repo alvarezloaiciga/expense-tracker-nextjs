@@ -26,6 +26,11 @@ const navItems = [
     icon: Tag,
   },
   {
+    name: "Credit Cards",
+    href: "/credit-cards",
+    icon: CreditCard,
+  },
+  {
     name: "Analytics",
     href: "/analytics",
     icon: BarChart3,

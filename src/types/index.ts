@@ -12,4 +12,13 @@ export interface AuthResponse {
 export interface APIError {
   message: string;
   status?: number;
+}
+
+export interface CreditCard {
+  id: number;
+  name: string;
+  last_four_digits: string;
+  brand: string;
+  limit: number;
+  balance: number;
 } 
