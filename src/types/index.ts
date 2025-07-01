@@ -28,4 +28,22 @@ export interface Category {
   user_id: number;
   name: string;
   color: string;
+}
+
+export interface Transaction {
+  id: number;
+  credit_card_id: number;
+  category_id?: number;
+  amount: string; // using string for decimal precision
+  currency: string;
+  reference_id: string;
+  merchant_name: string;
+  city?: string;
+  country?: string;
+  transaction_date: string; // ISO string
+  authorization_code?: string;
+  transaction_type: "EXPENSE" | "INCOME";
+  created_at: string; // ISO string
+  updated_at: string; // ISO string
+  email_content?: string;
 } 
