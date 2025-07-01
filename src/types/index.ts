@@ -21,4 +21,11 @@ export interface CreditCard {
   brand: string;
   limit: number;
   balance: number;
+}
+
+export interface Category {
+  id: number;
+  user_id: number;
+  name: string;
+  color: string;
 } 
