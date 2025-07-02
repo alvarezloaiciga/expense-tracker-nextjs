@@ -146,91 +146,12 @@ export default function CategoriesPage() {
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredCategories.map((category) => {
-          const budget = category.budget != null ? category.budget : 0
-          const percent = budget > 0 ? (category.total_spent / budget) * 100 : 0
-          return (
-            <Card key={category.id}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    {category.name}
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Budget: ${budget ? budget.toLocaleString() : "—"}</span>
-                      <span>
-                        ${category.total_spent.toFixed(2)} ({Math.round(percent)}%)
-                      </span>
-                    </div>
-                    <Progress value={percent} className="h-2" />
-                  </div>
-                  <div className="text-sm text-muted-foreground mb-2">
-                    {category.transaction_count} transactions
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => handleEditClick(category)}
-                    >
-                      <Edit className="mr-2 h-3 w-3" /> Edit
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="w-full">
-                          <Trash2 className="mr-2 h-3 w-3" /> Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Category</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete &quot;{category.name}&quot;? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDeleteCategory(category)}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between sm:items-center">
             <CardTitle>All Categories</CardTitle>
             <div className="mt-2 sm:mt-0 relative w-full sm:w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search categories..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
+              <Input type="search" placeholder="Search categories..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
           </div>
         </CardHeader>
@@ -240,71 +161,75 @@ export default function CategoriesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Category</TableHead>
-                  <TableHead>Color</TableHead>
+                  <TableHead>Transactions</TableHead>
+                  <TableHead>Budget</TableHead>
+                  <TableHead>Spent</TableHead>
+                  <TableHead>Progress</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCategories.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground">
                       {searchTerm ? "No categories found" : "No categories yet"}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredCategories.map((category) => (
-                    <TableRow key={category.id}>
-                      <TableCell className="font-medium">{category.name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-4 h-4 rounded-full"
-                            style={{ backgroundColor: category.color }}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            {category.color}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditClick(category)}
-                          >
-                            <Edit className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete</span>
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Category</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete &quot;{category.name}&quot;? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteCategory(category)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filteredCategories.map((category) => {
+                    const budget = category.budget != null ? category.budget : 0
+                    const percent = budget > 0 ? (category.total_spent / budget) * 100 : 0
+                    return (
+                      <TableRow key={category.id}>
+                        <TableCell className="font-medium flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full" style={{ backgroundColor: category.color }} />
+                          {category.name}
+                        </TableCell>
+                        <TableCell>{category.transaction_count}</TableCell>
+                        <TableCell>${budget ? budget.toLocaleString() : "—"}</TableCell>
+                        <TableCell>${category.total_spent.toFixed(2)}</TableCell>
+                        <TableCell style={{ minWidth: 120 }}>
+                          <div className="flex items-center gap-2">
+                            <Progress value={percent} className="h-2 flex-1" />
+                            <span className="text-xs">{Math.round(percent)}%</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleEditClick(category)}>
+                              <Edit className="h-4 w-4" />
+                              <span className="sr-only">Edit</span>
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete &quot;{category.name}&quot;? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteCategory(category)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
                 )}
               </TableBody>
             </Table>
