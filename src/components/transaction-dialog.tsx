@@ -43,6 +43,8 @@ interface TransactionDialogProps {
   onSubmit: (data: TransactionFormData) => Promise<void>
   trigger?: React.ReactNode
   mode?: "create" | "edit"
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const currencies = ["USD", "CRC", "EUR", "GBP", "JPY", "CAD", "AUD"]
@@ -93,9 +95,13 @@ export function TransactionDialog({
   creditCards, 
   onSubmit, 
   trigger, 
-  mode = "create" 
+  mode = "create",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange
 }: TransactionDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const setOpen = controlledOnOpenChange || setInternalOpen
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [date, setDate] = useState<Date | undefined>(
     transaction?.transaction_date ? new Date(transaction.transaction_date) : new Date()

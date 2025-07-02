@@ -28,6 +28,7 @@ export default function TransactionsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All Categories")
   const [selectedCard, setSelectedCard] = useState<string>("All Cards")
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>()
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
   const { toast } = useToast()
 
   const loadData = useCallback(async () => {
@@ -123,6 +124,7 @@ export default function TransactionsPage() {
         t.id === updatedTransaction.id ? updatedTransaction : t
       ))
       setEditingTransaction(undefined)
+      setEditDialogOpen(false)
       toast({
         title: "Success",
         description: "Transaction updated successfully",
@@ -158,6 +160,7 @@ export default function TransactionsPage() {
 
   const handleEditClick = (transaction: Transaction) => {
     setEditingTransaction(transaction)
+    setEditDialogOpen(true)
   }
 
   const getCategoryName = (categoryId?: number) => {
@@ -398,7 +401,8 @@ export default function TransactionsPage() {
           creditCards={creditCards}
           onSubmit={handleUpdateTransaction}
           mode="edit"
-          trigger={<div style={{ display: "none" }} />}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
         />
       )}
     </div>
