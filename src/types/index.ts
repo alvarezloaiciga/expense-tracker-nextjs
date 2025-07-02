@@ -28,6 +28,9 @@ export interface Category {
   user_id: number;
   name: string;
   color: string;
+  budget: number;
+  transaction_count: number;
+  total_spent: number;
 }
 
 export interface Transaction {

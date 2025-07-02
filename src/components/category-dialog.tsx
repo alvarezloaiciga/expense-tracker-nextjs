@@ -15,6 +15,7 @@ import type { Category } from "@/types"
 const categorySchema = z.object({
   name: z.string().min(1, "Name is required").max(50, "Name must be less than 50 characters"),
   color: z.string().regex(/^#[0-9A-F]{6}$/i, "Must be a valid hex color"),
+  budget: z.coerce.number().min(0, "Budget is required"),
 })
 
 type CategoryFormData = z.infer<typeof categorySchema>
@@ -24,12 +25,14 @@ interface CategoryDialogProps {
   onSubmit: (data: CategoryFormData) => Promise<void>
   trigger?: React.ReactNode
   mode?: "create" | "edit"
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-
-
-export function CategoryDialog({ category, onSubmit, trigger, mode = "create" }: CategoryDialogProps) {
-  const [open, setOpen] = useState(false)
+export function CategoryDialog({ category, onSubmit, trigger, mode = "create", open: controlledOpen, onOpenChange: controlledOnOpenChange }: CategoryDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const setOpen = controlledOnOpenChange || setInternalOpen
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const {
@@ -44,6 +47,7 @@ export function CategoryDialog({ category, onSubmit, trigger, mode = "create" }:
     defaultValues: {
       name: category?.name || "",
       color: category?.color || "#3B82F6",
+      budget: category?.budget || 0,
     },
   })
 
@@ -54,6 +58,7 @@ export function CategoryDialog({ category, onSubmit, trigger, mode = "create" }:
     if (category) {
       setValue("name", category.name)
       setValue("color", category.color)
+      setValue("budget", category.budget)
     } else {
       reset()
     }
@@ -108,6 +113,21 @@ export function CategoryDialog({ category, onSubmit, trigger, mode = "create" }:
             />
             {errors.name && (
               <p className="text-sm text-red-500">{errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="budget">Budget</Label>
+            <Input
+              id="budget"
+              type="number"
+              step="0.01"
+              min="0"
+              {...register("budget", { valueAsNumber: true })}
+              placeholder="Enter budget (e.g. 500)"
+            />
+            {errors.budget && (
+              <p className="text-sm text-red-500">{errors.budget.message}</p>
             )}
           </div>
 

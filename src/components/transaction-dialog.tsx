@@ -31,7 +31,6 @@ const transactionSchema = z.object({
   }),
   authorization_code: z.string().optional(),
   transaction_type: z.enum(["EXPENSE", "INCOME"]),
-  email_content: z.string().optional(),
 })
 
 type TransactionFormData = z.infer<typeof transactionSchema>
@@ -128,7 +127,6 @@ export function TransactionDialog({
       transaction_date: transaction?.transaction_date ? new Date(transaction.transaction_date) : new Date(),
       authorization_code: transaction?.authorization_code || "",
       transaction_type: transaction?.transaction_type || "EXPENSE",
-      email_content: transaction?.email_content || "",
     },
   })
 
@@ -148,7 +146,6 @@ export function TransactionDialog({
       setValue("transaction_date", new Date(transaction.transaction_date))
       setValue("authorization_code", transaction.authorization_code || "")
       setValue("transaction_type", transaction.transaction_type)
-      setValue("email_content", transaction.email_content || "")
       setDate(new Date(transaction.transaction_date))
     } else {
       reset()
@@ -390,16 +387,7 @@ export function TransactionDialog({
             />
           </div>
 
-          {/* Email Content */}
-          <div className="space-y-2">
-            <Label htmlFor="email_content">Email Content</Label>
-            <Textarea
-              id="email_content"
-              {...register("email_content")}
-              placeholder="Email content or notes..."
-              rows={4}
-            />
-          </div>
+
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button

@@ -72,12 +72,12 @@ export async function getCategories(): Promise<Category[]> {
   return data;
 }
 
-export async function createCategory(category: Omit<Category, 'id' | 'user_id'>): Promise<Category> {
+export async function createCategory(category: { name: string; color: string; budget: number }): Promise<Category> {
   const { data } = await api.post<Category>('/api/categories', category);
   return data;
 }
 
-export async function updateCategory(category: Category): Promise<Category> {
+export async function updateCategory(category: { id: number; name: string; color: string; budget: number }): Promise<Category> {
   const { data } = await api.put<Category>(`/api/categories/${category.id}`, category);
   return data;
 }

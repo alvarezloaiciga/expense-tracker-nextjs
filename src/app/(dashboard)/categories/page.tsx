@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Progress } from "@/components/ui/progress"
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Edit, Trash2, Search } from "lucide-react"
@@ -18,22 +19,23 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [editingCategory, setEditingCategory] = useState<Category | undefined>()
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
   const { toast } = useToast()
 
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const loadCategories = useCallback(async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
-      const data = await getCategories()
-      setCategories(data)
+      const categoriesData = await getCategories()
+      setCategories(categoriesData)
     } catch (error) {
-      console.error("Error loading categories:", error)
+      console.error("Error loading data:", error)
       toast({
         title: "Error",
-        description: "Failed to load categories",
+        description: "Failed to load data",
         variant: "destructive",
       })
     } finally {
@@ -42,10 +44,10 @@ export default function CategoriesPage() {
   }, [toast])
 
   useEffect(() => {
-    loadCategories()
-  }, [loadCategories])
+    loadData()
+  }, [loadData])
 
-  const handleCreateCategory = async (data: { name: string; color: string }) => {
+  const handleCreateCategory = async (data: { name: string; color: string; budget: number }) => {
     try {
       const newCategory = await createCategory(data)
       setCategories(prev => [...prev, newCategory])
@@ -64,7 +66,7 @@ export default function CategoriesPage() {
     }
   }
 
-  const handleUpdateCategory = async (data: { name: string; color: string }) => {
+  const handleUpdateCategory = async (data: { name: string; color: string; budget: number }) => {
     if (!editingCategory) return
 
     try {
@@ -76,6 +78,7 @@ export default function CategoriesPage() {
         cat.id === updatedCategory.id ? updatedCategory : cat
       ))
       setEditingCategory(undefined)
+      setEditDialogOpen(false)
       toast({
         title: "Success",
         description: "Category updated successfully",
@@ -111,6 +114,7 @@ export default function CategoriesPage() {
 
   const handleEditClick = (category: Category) => {
     setEditingCategory(category)
+    setEditDialogOpen(true)
   }
 
   if (loading) {
@@ -143,59 +147,75 @@ export default function CategoriesPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredCategories.slice(0, 3).map((category) => (
-          <Card key={category.id}>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: category.color }}
-                  />
-                  {category.name}
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => handleEditClick(category)}
-                  >
-                    <Edit className="mr-2 h-3 w-3" /> Edit
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Trash2 className="mr-2 h-3 w-3" /> Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Category</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete &quot;{category.name}&quot;? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteCategory(category)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+        {filteredCategories.map((category) => {
+          const budget = category.budget != null ? category.budget : 0
+          const percent = budget > 0 ? (category.total_spent / budget) * 100 : 0
+          return (
+            <Card key={category.id}>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: category.color }}
+                    />
+                    {category.name}
+                  </CardTitle>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Budget: ${budget ? budget.toLocaleString() : "—"}</span>
+                      <span>
+                        ${category.total_spent.toFixed(2)} ({Math.round(percent)}%)
+                      </span>
+                    </div>
+                    <Progress value={percent} className="h-2" />
+                  </div>
+                  <div className="text-sm text-muted-foreground mb-2">
+                    {category.transaction_count} transactions
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleEditClick(category)}
+                    >
+                      <Edit className="mr-2 h-3 w-3" /> Edit
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Trash2 className="mr-2 h-3 w-3" /> Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete &quot;{category.name}&quot;? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteCategory(category)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
       <Card>
@@ -298,7 +318,8 @@ export default function CategoriesPage() {
           category={editingCategory}
           onSubmit={handleUpdateCategory}
           mode="edit"
-          trigger={<div style={{ display: "none" }} />}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
         />
       )}
     </div>
