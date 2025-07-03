@@ -87,9 +87,25 @@ export async function deleteCategory(id: number): Promise<void> {
 }
 
 // --- Transactions API ---
-export async function getTransactions(): Promise<Transaction[]> {
-  const { data } = await api.get('/api/transactions');
-  return data.transactions;
+export async function getTransactions(params: {
+  page?: number;
+  category_id?: number;
+  credit_card_id?: number;
+  transaction_type?: string;
+  start_date?: string;
+  end_date?: string;
+  search?: string;
+} = {}): Promise<{ transactions: Transaction[]; pagination: any }> {
+  const query = new URLSearchParams();
+  if (params.page) query.append('page', params.page.toString());
+  if (params.category_id) query.append('category_id', params.category_id.toString());
+  if (params.credit_card_id) query.append('credit_card_id', params.credit_card_id.toString());
+  if (params.transaction_type) query.append('transaction_type', params.transaction_type);
+  if (params.start_date) query.append('start_date', params.start_date);
+  if (params.end_date) query.append('end_date', params.end_date);
+  if (params.search) query.append('search', params.search);
+  const { data } = await api.get(`/api/transactions?${query.toString()}`);
+  return { transactions: data.transactions, pagination: data.pagination };
 }
 
 export async function createTransaction(transaction: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>): Promise<Transaction> {

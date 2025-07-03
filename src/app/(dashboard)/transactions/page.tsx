@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -17,62 +18,151 @@ import { getTransactions, createTransaction, updateTransaction, deleteTransactio
 import type { Transaction, Category, CreditCard } from "@/types"
 import { useToast } from "@/../../hooks/use-toast"
 import { format } from "date-fns"
+import { Pagination } from "@/components/ui/pagination"
 
 export default function TransactionsPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [creditCards, setCreditCards] = useState<CreditCard[]>([])
   const [loading, setLoading] = useState(true)
   const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>("USD")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string>("All Categories")
-  const [selectedCard, setSelectedCard] = useState<string>("All Cards")
+  
+  // Initialize state from URL parameters
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "All Categories")
+  const [selectedCard, setSelectedCard] = useState(searchParams.get("card") || "All Cards")
+  const [selectedDateRange, setSelectedDateRange] = useState(searchParams.get("dateRange") || "All")
+  const [pagination, setPagination] = useState({
+    current_page: parseInt(searchParams.get("page") || "1"),
+    total_pages: 1,
+    total_count: 0,
+    per_page: parseInt(searchParams.get("perPage") || "20"),
+  });
+  
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const { toast } = useToast()
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const [transactionsData, categoriesData, creditCardsData] = await Promise.all([
-        getTransactions(),
-        getCategories(),
-        getCreditCards(),
-      ])
-      setTransactions(transactionsData)
-      setCategories(categoriesData)
-      setCreditCards(creditCardsData)
-    } catch (error) {
-      console.error("Error loading data:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load transactions",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
+  const getCategoryId = () => {
+    if (selectedCategory === "All Categories" || selectedCategory === "Uncategorized") return undefined;
+    const cat = categories.find(c => c.name === selectedCategory);
+    return cat ? cat.id : undefined;
+  };
+
+  const getCreditCardId = () => {
+    if (selectedCard === "All Cards") return undefined;
+    const card = creditCards.find(c => c.name === selectedCard);
+    return card ? card.id : undefined;
+  };
+
+  const getDateRange = () => {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay()); // Start of current week (Sunday)
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1); // Start of current month
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); // Start of last month
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0); // End of last month
+    
+    if (selectedDateRange === "This Week") {
+      return { start: startOfWeek, end: now };
+    } else if (selectedDateRange === "This Month") {
+      return { start: startOfMonth, end: now };
+    } else if (selectedDateRange === "Last Month") {
+      return { start: startOfLastMonth, end: endOfLastMonth };
     }
-  }, [toast])
+    return {}; // Custom or All - no date filtering
+  };
 
+  // Function to update URL parameters
+  const updateURL = useCallback((updates: Record<string, string | number>) => {
+    const params = new URLSearchParams(searchParams.toString())
+    
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === "" || value === "All Categories" || value === "All Cards" || value === "All") {
+        params.delete(key)
+      } else {
+        params.set(key, value.toString())
+      }
+    })
+    
+    // Reset to page 1 when filters change (except for page changes)
+    if (!updates.hasOwnProperty("page")) {
+      params.delete("page")
+    }
+    
+    router.push(`?${params.toString()}`)
+  }, [searchParams, router])
+
+  // Update URL when state changes
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    updateURL({
+      search: searchTerm,
+      category: selectedCategory,
+      card: selectedCard,
+      dateRange: selectedDateRange,
+      page: pagination.current_page,
+      perPage: pagination.per_page,
+    })
+  }, [searchTerm, selectedCategory, selectedCard, selectedDateRange, pagination.current_page, pagination.per_page, updateURL])
 
-  const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.merchant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.reference_id.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesCategory = selectedCategory === "All Categories"
-      ? true
-      : selectedCategory === "Uncategorized"
-        ? !transaction.category_id
-        : categories.find(c => c.id === transaction.category_id)?.name === selectedCategory
-    
-    const matchesCard = selectedCard === "All Cards" ||
-                       creditCards.find(c => c.id === transaction.credit_card_id)?.name === selectedCard
+  const loadTransactions = useCallback(async (page = pagination.current_page) => {
+    setLoading(true);
+    try {
+      const categoryId = getCategoryId();
+      const creditCardId = getCreditCardId();
+      const dateRange = getDateRange();
+      const params: any = {
+        page,
+        per_page: pagination.per_page,
+        search: searchTerm || undefined,
+      };
+      if (categoryId) params.category_id = categoryId;
+      if (selectedCategory === "Uncategorized") params.category_id = "null";
+      if (creditCardId) params.credit_card_id = creditCardId;
+      if (dateRange.start) params.start_date = dateRange.start.toISOString().slice(0, 10);
+      if (dateRange.end) params.end_date = dateRange.end.toISOString().slice(0, 10);
+      // Add more filters as needed
+      const { transactions, pagination: newPagination } = await getTransactions(params);
+      setTransactions(transactions);
+      // Preserve the current per_page value from our state, not from server response
+      setPagination({
+        ...newPagination,
+        per_page: pagination.per_page
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [categories, creditCards, searchTerm, selectedCategory, selectedCard, selectedDateRange, pagination.per_page, pagination.current_page]);
 
-    return matchesSearch && matchesCategory && matchesCard
-  })
+  // Load initial data
+  useEffect(() => {
+    const loadInitialData = async () => {
+      await Promise.all([
+        getCategories().then(setCategories),
+        getCreditCards().then(setCreditCards)
+      ]);
+    };
+    loadInitialData();
+  }, []);
+
+  // Load transactions when filters change
+  useEffect(() => {
+    if (categories.length > 0 && creditCards.length > 0) {
+      loadTransactions(pagination.current_page);
+    }
+  }, [loadTransactions, categories.length, creditCards.length]);
+
+  // Load transactions when per_page changes
+  useEffect(() => {
+    if (categories.length > 0 && creditCards.length > 0) {
+      loadTransactions(1); // Always go to page 1 when per_page changes
+    }
+  }, [pagination.per_page, categories.length, creditCards.length]);
 
   const getDisplayAmount = (transaction: Transaction) => {
     const amount = parseFloat(transaction.amount)
@@ -273,15 +363,15 @@ export default function TransactionsPage() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10">
                     <Filter className="mr-2 h-4 w-4" />
-                    Date Range
+                    {selectedDateRange === "All" ? "Date Range" : selectedDateRange}
                     <ChevronDown className="ml-2 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Last 7 days</DropdownMenuItem>
-                  <DropdownMenuItem>Last 30 days</DropdownMenuItem>
-                  <DropdownMenuItem>Last 90 days</DropdownMenuItem>
-                  <DropdownMenuItem>Custom range</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedDateRange("This Week")}>This Week</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedDateRange("This Month")}>This Month</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedDateRange("Last Month")}>Last Month</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedDateRange("All")}>All Time</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -302,7 +392,7 @@ export default function TransactionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransactions.length === 0 ? (
+                {transactions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground">
                       {searchTerm || selectedCategory !== "All Categories" || selectedCard !== "All Cards" 
@@ -311,7 +401,7 @@ export default function TransactionsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredTransactions.map((transaction) => (
+                  transactions.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell className="font-medium">
                         {format(new Date(transaction.transaction_date), "MMM dd, yyyy")}
@@ -398,7 +488,7 @@ export default function TransactionsPage() {
       </Card>
 
       {/* Edit Dialog */}
-      {editingTransaction && (
+      {editingTransaction && categories.length > 0 && creditCards.length > 0 && (
         <TransactionDialog
           transaction={editingTransaction}
           categories={categories}
@@ -409,6 +499,21 @@ export default function TransactionsPage() {
           onOpenChange={setEditDialogOpen}
         />
       )}
+
+      <Pagination
+        currentPage={pagination.current_page}
+        totalPages={pagination.total_pages}
+        pageSize={pagination.per_page}
+        totalItems={pagination.total_count}
+        onPageChange={(page) => {
+          setPagination(prev => ({ ...prev, current_page: page }));
+          loadTransactions(page);
+        }}
+        onPageSizeChange={(pageSize) => {
+          setPagination(prev => ({ ...prev, per_page: pageSize, current_page: 1 }));
+          // The loadTransactions will be triggered by the useEffect when pagination.per_page changes
+        }}
+      />
     </div>
   )
 }
