@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -21,31 +21,29 @@ import { format } from "date-fns"
 import { Pagination } from "@/components/ui/pagination"
 
 export default function TransactionsPage() {
-  const searchParams = useSearchParams()
   const router = useRouter()
-  
+  const searchParams = useSearchParams()
+
+  // Local state for all filters/search/pagination
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("All Categories")
+  const [selectedCard, setSelectedCard] = useState("All Cards")
+  const [selectedDateRange, setSelectedDateRange] = useState("All")
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    total_pages: 1,
+    total_count: 0,
+    per_page: 20,
+  })
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [creditCards, setCreditCards] = useState<CreditCard[]>([])
   const [loading, setLoading] = useState(true)
   const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>("USD")
-  
-  // Initialize state from URL parameters
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "All Categories")
-  const [selectedCard, setSelectedCard] = useState(searchParams.get("card") || "All Cards")
-  const [selectedDateRange, setSelectedDateRange] = useState(searchParams.get("dateRange") || "All")
-  const [pagination, setPagination] = useState({
-    current_page: parseInt(searchParams.get("page") || "1"),
-    total_pages: 1,
-    total_count: 0,
-    per_page: parseInt(searchParams.get("perPage") || "20"),
-  });
-  
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const { toast } = useToast()
-
+  
   const getCategoryId = () => {
     if (selectedCategory === "All Categories" || selectedCategory === "Uncategorized") return undefined;
     const cat = categories.find(c => c.name === selectedCategory);
@@ -78,37 +76,58 @@ export default function TransactionsPage() {
     return {}; // Custom or All - no date filtering
   };
 
-  // Function to update URL parameters
-  const updateURL = useCallback((updates: Record<string, string | number>) => {
-    const params = new URLSearchParams(searchParams.toString())
-    
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === "" || value === "All Categories" || value === "All Cards" || value === "All") {
-        params.delete(key)
-      } else {
-        params.set(key, value.toString())
-      }
-    })
-    
-    // Reset to page 1 when filters change (except for page changes)
-    if (!updates.hasOwnProperty("page")) {
-      params.delete("page")
-    }
-    
-    router.push(`?${params.toString()}`)
-  }, [searchParams, router])
-
-  // Update URL when state changes
+  // On mount, initialize local state from URL
   useEffect(() => {
-    updateURL({
-      search: searchTerm,
-      category: selectedCategory,
-      card: selectedCard,
-      dateRange: selectedDateRange,
-      page: pagination.current_page,
-      perPage: pagination.per_page,
-    })
-  }, [searchTerm, selectedCategory, selectedCard, selectedDateRange, pagination.current_page, pagination.per_page, updateURL])
+    const params = new URLSearchParams(window.location.search)
+    setSearchTerm(params.get("search") || "")
+    setSelectedCategory(params.get("category") || "All Categories")
+    setSelectedCard(params.get("card") || "All Cards")
+    setSelectedDateRange(params.get("dateRange") || "All")
+    setPagination(prev => ({
+      ...prev,
+      current_page: parseInt(params.get("page") || "1"),
+      per_page: parseInt(params.get("perPage") || "20"),
+    }))
+  }, [])
+
+  // Listen for popstate (back/forward navigation) and sync local state
+  useEffect(() => {
+    const onPopState = () => {
+      const params = new URLSearchParams(window.location.search)
+      setSearchTerm(params.get("search") || "")
+      setSelectedCategory(params.get("category") || "All Categories")
+      setSelectedCard(params.get("card") || "All Cards")
+      setSelectedDateRange(params.get("dateRange") || "All")
+      setPagination(prev => ({
+        ...prev,
+        current_page: parseInt(params.get("page") || "1"),
+        per_page: parseInt(params.get("perPage") || "20"),
+      }))
+    }
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [])
+
+  // Debounced URL update
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams()
+      if (searchTerm) params.set("search", searchTerm)
+      if (selectedCategory && selectedCategory !== "All Categories") params.set("category", selectedCategory)
+      if (selectedCard && selectedCard !== "All Cards") params.set("card", selectedCard)
+      if (selectedDateRange && selectedDateRange !== "All") params.set("dateRange", selectedDateRange)
+      if (pagination.current_page !== 1) params.set("page", String(pagination.current_page))
+      if (pagination.per_page !== 20) params.set("perPage", String(pagination.per_page))
+      const url = params.toString() ? `?${params.toString()}` : ""
+      // Use history.replaceState to avoid Next.js re-render
+      window.history.replaceState(null, '', url)
+    }, 500)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [searchTerm, selectedCategory, selectedCard, selectedDateRange, pagination.current_page, pagination.per_page])
 
   const loadTransactions = useCallback(async (page = pagination.current_page) => {
     setLoading(true);
@@ -378,116 +397,139 @@ export default function TransactionsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Merchant</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Card</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <p className="text-muted-foreground">Loading transactions...</p>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      {searchTerm || selectedCategory !== "All Categories" || selectedCard !== "All Cards" 
-                        ? "No transactions found" 
-                        : "No transactions yet"}
-                    </TableCell>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Merchant</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Card</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  transactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell className="font-medium">
-                        {format(new Date(transaction.transaction_date), "MMM dd, yyyy")}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{transaction.merchant_name}</div>
-                          <div className="text-sm text-muted-foreground">{transaction.reference_id}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: getCategoryColor(transaction.category_id) }}
-                          />
-                          <span className="text-sm">{getCategoryName(transaction.category_id)}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">{getCardName(transaction.credit_card_id)}</TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{getDisplayAmount(transaction)}</div>
-                          {getOriginalAmount(transaction) && (
-                            <div className="text-sm text-muted-foreground">
-                              {getOriginalAmount(transaction)}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={transaction.transaction_type === "EXPENSE" ? "destructive" : "default"}>
-                          {transaction.transaction_type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon">
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">View</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditClick(transaction)}
-                          >
-                            <Edit className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete</span>
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete this transaction? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteTransaction(transaction)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {transactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground">
+                        {searchTerm || selectedCategory !== "All Categories" || selectedCard !== "All Cards" 
+                          ? "No transactions found" 
+                          : "No transactions yet"}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : (
+                    transactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="font-medium">
+                          {format(new Date(transaction.transaction_date), "MMM dd, yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{transaction.merchant_name}</div>
+                            <div className="text-sm text-muted-foreground">{transaction.reference_id}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: getCategoryColor(transaction.category_id) }}
+                            />
+                            <span className="text-sm">{getCategoryName(transaction.category_id)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">{getCardName(transaction.credit_card_id)}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{getDisplayAmount(transaction)}</div>
+                            {getOriginalAmount(transaction) && (
+                              <div className="text-sm text-muted-foreground">
+                                {getOriginalAmount(transaction)}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={transaction.transaction_type === "EXPENSE" ? "destructive" : "default"}>
+                            {transaction.transaction_type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon">
+                              <Eye className="h-4 w-4" />
+                              <span className="sr-only">View</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditClick(transaction)}
+                            >
+                              <Edit className="h-4 w-4" />
+                              <span className="sr-only">Edit</span>
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this transaction? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteTransaction(transaction)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
+      {!loading && (
+        <Pagination
+          currentPage={pagination.current_page}
+          totalPages={pagination.total_pages}
+          pageSize={pagination.per_page}
+          totalItems={pagination.total_count}
+          onPageChange={(page) => {
+            setPagination(prev => ({ ...prev, current_page: page }));
+            loadTransactions(page);
+          }}
+          onPageSizeChange={(pageSize) => {
+            setPagination(prev => ({ ...prev, per_page: pageSize, current_page: 1 }));
+            // The loadTransactions will be triggered by the useEffect when pagination.per_page changes
+          }}
+        />
+      )}
+
+      {/* Edit Dialog rendered at the root, not inside Card/Table */}
       {editingTransaction && categories.length > 0 && creditCards.length > 0 && (
         <TransactionDialog
           transaction={editingTransaction}
@@ -499,21 +541,6 @@ export default function TransactionsPage() {
           onOpenChange={setEditDialogOpen}
         />
       )}
-
-      <Pagination
-        currentPage={pagination.current_page}
-        totalPages={pagination.total_pages}
-        pageSize={pagination.per_page}
-        totalItems={pagination.total_count}
-        onPageChange={(page) => {
-          setPagination(prev => ({ ...prev, current_page: page }));
-          loadTransactions(page);
-        }}
-        onPageSizeChange={(pageSize) => {
-          setPagination(prev => ({ ...prev, per_page: pageSize, current_page: 1 }));
-          // The loadTransactions will be triggered by the useEffect when pagination.per_page changes
-        }}
-      />
     </div>
   )
 }

@@ -187,9 +187,12 @@ export function TransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
+      {/* Only render the trigger in create mode or if a custom trigger is provided */}
+      {(mode === "create" || trigger) && (
+        <DialogTrigger asChild>
+          {trigger || defaultTrigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
