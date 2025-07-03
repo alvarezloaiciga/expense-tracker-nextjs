@@ -62,8 +62,11 @@ export default function TransactionsPage() {
     const matchesSearch = transaction.merchant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          transaction.reference_id.toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchesCategory = selectedCategory === "All Categories" || 
-                           (transaction.category_id && categories.find(c => c.id === transaction.category_id)?.name === selectedCategory)
+    const matchesCategory = selectedCategory === "All Categories"
+      ? true
+      : selectedCategory === "Uncategorized"
+        ? !transaction.category_id
+        : categories.find(c => c.id === transaction.category_id)?.name === selectedCategory
     
     const matchesCard = selectedCard === "All Cards" ||
                        creditCards.find(c => c.id === transaction.credit_card_id)?.name === selectedCard
@@ -237,6 +240,7 @@ export default function TransactionsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All Categories">All Categories</SelectItem>
+                  <SelectItem value="Uncategorized">Uncategorized</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.name}>
                       <div className="flex items-center gap-2">
