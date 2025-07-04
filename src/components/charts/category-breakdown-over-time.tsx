@@ -10,6 +10,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "@/components/ui/chart"
+import { formatCurrency, type CurrencyCode } from "@/lib/currency"
 
 const data = [
   {
@@ -62,7 +63,11 @@ const data = [
   },
 ]
 
-export function CategoryBreakdownOverTime() {
+interface CategoryBreakdownOverTimeProps {
+  currency?: CurrencyCode
+}
+
+export function CategoryBreakdownOverTime({ currency = "USD" }: CategoryBreakdownOverTimeProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart
@@ -76,8 +81,8 @@ export function CategoryBreakdownOverTime() {
       >
         <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
         <XAxis dataKey="name" />
-        <YAxis tickFormatter={(value) => `$${value}`} />
-        <Tooltip formatter={(value) => [`$${value}`, "Amount"]} />
+        <YAxis tickFormatter={(value) => formatCurrency(value, currency)} />
+        <Tooltip formatter={(value) => [formatCurrency(value as number, currency), "Amount"]} />
         <Legend />
         <Area type="monotone" dataKey="Groceries" stackId="1" stroke="#8884d8" fill="#8884d8" />
         <Area type="monotone" dataKey="Dining" stackId="1" stroke="#82ca9d" fill="#82ca9d" />

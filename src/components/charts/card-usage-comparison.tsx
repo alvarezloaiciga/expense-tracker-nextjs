@@ -1,6 +1,7 @@
 "use client"
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "@/components/ui/chart"
+import { formatCurrency, type CurrencyCode } from "@/lib/currency"
 
 const data = [
   { name: "Chase Sapphire", value: 1543.21 },
@@ -11,7 +12,11 @@ const data = [
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"]
 
-export function CardUsageComparison() {
+interface CardUsageComparisonProps {
+  currency?: CurrencyCode
+}
+
+export function CardUsageComparison({ currency = "USD" }: CardUsageComparisonProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
@@ -29,7 +34,7 @@ export function CardUsageComparison() {
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip formatter={(value) => [`$${value}`, "Amount"]} />
+        <Tooltip formatter={(value) => [formatCurrency(value as number, currency), "Amount"]} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>

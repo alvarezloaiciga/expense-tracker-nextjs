@@ -1,8 +1,14 @@
 "use client"
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "@/components/ui/chart"
+import { formatCurrency, type CurrencyCode } from "@/lib/currency"
 
-export function TopVendors({ data }: { data?: { merchant: string; amount: number }[] }) {
+interface TopVendorsProps {
+  data?: { merchant: string; amount: number }[]
+  currency?: CurrencyCode
+}
+
+export function TopVendors({ data, currency = "USD" }: TopVendorsProps) {
   if (!data || data.length === 0) {
     return <div className="flex items-center justify-center h-full text-muted-foreground">No data</div>;
   }
@@ -21,9 +27,9 @@ export function TopVendors({ data }: { data?: { merchant: string; amount: number
           }}
         >
           <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.2} />
-          <XAxis type="number" tickFormatter={(value) => `$${value}`} />
+          <XAxis type="number" tickFormatter={(value) => formatCurrency(value, currency)} />
           <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={70} />
-          <Tooltip formatter={(value) => [`$${value}`, "Amount"]} />
+          <Tooltip formatter={(value) => [formatCurrency(value as number, currency), "Amount"]} />
           <Bar dataKey="amount" fill="#8884d8" radius={[0, 4, 4, 0]} />
         </BarChart>
       </ResponsiveContainer>

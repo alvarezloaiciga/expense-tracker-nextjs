@@ -1,6 +1,7 @@
 "use client"
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "@/components/ui/chart"
+import { formatCurrency, type CurrencyCode } from "@/lib/currency"
 
 const data = [
   {
@@ -65,7 +66,11 @@ const data = [
   },
 ]
 
-export function MonthlySpendingComparison() {
+interface MonthlySpendingComparisonProps {
+  currency?: CurrencyCode
+}
+
+export function MonthlySpendingComparison({ currency = "USD" }: MonthlySpendingComparisonProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
@@ -79,8 +84,8 @@ export function MonthlySpendingComparison() {
       >
         <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
         <XAxis dataKey="name" />
-        <YAxis tickFormatter={(value) => `$${value}`} />
-        <Tooltip formatter={(value) => [`$${value}`, "Amount"]} />
+        <YAxis tickFormatter={(value) => formatCurrency(value, currency)} />
+        <Tooltip formatter={(value) => [formatCurrency(value as number, currency), "Amount"]} />
         <Legend />
         <Bar dataKey="2022" fill="#8884d8" name="2022" />
         <Bar dataKey="2023" fill="#82ca9d" name="2023" />

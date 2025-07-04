@@ -1,8 +1,14 @@
 "use client"
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "@/components/ui/chart"
+import { formatCurrency, type CurrencyCode } from "@/lib/currency"
 
-export function DailySpendingTrend({ data }: { data?: { date: string; amount: number }[] }) {
+interface DailySpendingTrendProps {
+  data?: { date: string; amount: number }[]
+  currency?: CurrencyCode
+}
+
+export function DailySpendingTrend({ data, currency = "USD" }: DailySpendingTrendProps) {
   if (!data || data.length === 0) {
     return <div className="flex items-center justify-center h-full text-muted-foreground">No data</div>;
   }
@@ -27,8 +33,8 @@ export function DailySpendingTrend({ data }: { data?: { date: string; amount: nu
             return index % 5 === 0 ? value : ""
           }}
         />
-        <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `$${value}`} />
-        <Tooltip formatter={(value) => [`$${value}`, "Amount"]} />
+        <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => formatCurrency(value, currency)} />
+        <Tooltip formatter={(value) => [formatCurrency(value as number, currency), "Amount"]} />
         <Area type="monotone" dataKey="amount" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} />
       </AreaChart>
     </ResponsiveContainer>
