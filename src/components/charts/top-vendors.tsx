@@ -2,20 +2,16 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "@/components/ui/chart"
 
-const data = [
-  { name: "Whole Foods", amount: 243.56 },
-  { name: "Amazon", amount: 187.43 },
-  { name: "Starbucks", amount: 124.87 },
-  { name: "Target", amount: 98.76 },
-  { name: "Uber", amount: 87.65 },
-]
-
-export function TopVendors() {
+export function TopVendors({ data }: { data?: { merchant: string; amount: number }[] }) {
+  if (!data || data.length === 0) {
+    return <div className="flex items-center justify-center h-full text-muted-foreground">No data</div>;
+  }
+  const chartData = data.map(({ merchant, amount }) => ({ name: merchant, amount }));
   return (
     <div className="h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={data}
+          data={chartData}
           layout="vertical"
           margin={{
             top: 20,

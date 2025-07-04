@@ -49,4 +49,21 @@ export interface Transaction {
   created_at: string; // ISO string
   updated_at: string; // ISO string
   email_content?: string;
+}
+
+export interface DashboardStats {
+  summary: {
+    total_spending: number;
+    largest_category: { name: string; amount: number; percent: number };
+    transaction_count: number;
+    average_transaction: number;
+    trend: {
+      total_spending_pct_change: number;
+      transaction_count_pct_change: number;
+      average_transaction_pct_change: number;
+    };
+  };
+  daily_spending_trend: { date: string; amount: number }[];
+  spending_by_category: { category: string; amount: number; percent: number }[];
+  top_vendors: { merchant: string; amount: number }[];
 } 

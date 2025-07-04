@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AuthResponse, User, CreditCard, Category, Transaction } from '@/types';
+import type { AuthResponse, User, CreditCard, Category, Transaction, DashboardStats } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -122,6 +122,18 @@ export async function deleteTransaction(id: number): Promise<void> {
   await api.delete(`/api/transactions/${id}`);
 }
 
+// --- Dashboard API ---
+export async function getDashboardStats(params: {
+  from: string;
+  to: string;
+}): Promise<DashboardStats> {
+  const query = new URLSearchParams();
+  query.append('from', params.from);
+  query.append('to', params.to);
+  const { data } = await api.get<DashboardStats>(`/api/dashboard/stats?${query.toString()}`);
+  return data;
+}
+
 export function logout() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('auth-token');
@@ -146,5 +158,6 @@ export default {
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  getDashboardStats,
   logout,
 }; 

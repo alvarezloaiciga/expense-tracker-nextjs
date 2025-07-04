@@ -171,14 +171,15 @@ export default function TransactionsPage() {
 
   // Load transactions when filters change
   useEffect(() => {
-    if (categories.length > 0 && creditCards.length > 0) {
+    if (creditCards.length > 0) {
       loadTransactions(pagination.current_page);
     }
-  }, [loadTransactions, categories.length, creditCards.length]);
+  }, [loadTransactions, creditCards.length, pagination.current_page]);
 
   // Load transactions when per_page changes
   useEffect(() => {
     if (categories.length > 0 && creditCards.length > 0) {
+      console.log("Loading transactions", loading)
       loadTransactions(1); // Always go to page 1 when per_page changes
     }
   }, [pagination.per_page, categories.length, creditCards.length]);
@@ -292,22 +293,6 @@ export default function TransactionsPage() {
     return card?.name || "Unknown Card"
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-            <p className="text-muted-foreground">View and manage your transaction history</p>
-          </div>
-        </div>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading transactions...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
@@ -397,118 +382,118 @@ export default function TransactionsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">Loading transactions...</p>
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Merchant</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Card</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Merchant</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Card</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      Loading transactions...
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transactions.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">
-                        {searchTerm || selectedCategory !== "All Categories" || selectedCard !== "All Cards" 
-                          ? "No transactions found" 
-                          : "No transactions yet"}
+                ) : transactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      {searchTerm || selectedCategory !== "All Categories" || selectedCard !== "All Cards" 
+                        ? "No transactions found" 
+                        : "No transactions yet"}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  transactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-medium">
+                        {format(new Date(transaction.transaction_date), "MMM dd, yyyy")}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{transaction.merchant_name}</div>
+                          <div className="text-sm text-muted-foreground">{transaction.reference_id}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: getCategoryColor(transaction.category_id) }}
+                          />
+                          <span className="text-sm">{getCategoryName(transaction.category_id)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">{getCardName(transaction.credit_card_id)}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{getDisplayAmount(transaction)}</div>
+                          {getOriginalAmount(transaction) && (
+                            <div className="text-sm text-muted-foreground">
+                              {getOriginalAmount(transaction)}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={transaction.transaction_type === "EXPENSE" ? "destructive" : "default"}>
+                          {transaction.transaction_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon">
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">View</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditClick(transaction)}
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this transaction? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteTransaction(transaction)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    transactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell className="font-medium">
-                          {format(new Date(transaction.transaction_date), "MMM dd, yyyy")}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{transaction.merchant_name}</div>
-                            <div className="text-sm text-muted-foreground">{transaction.reference_id}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: getCategoryColor(transaction.category_id) }}
-                            />
-                            <span className="text-sm">{getCategoryName(transaction.category_id)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm">{getCardName(transaction.credit_card_id)}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{getDisplayAmount(transaction)}</div>
-                            {getOriginalAmount(transaction) && (
-                              <div className="text-sm text-muted-foreground">
-                                {getOriginalAmount(transaction)}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={transaction.transaction_type === "EXPENSE" ? "destructive" : "default"}>
-                            {transaction.transaction_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon">
-                              <Eye className="h-4 w-4" />
-                              <span className="sr-only">View</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditClick(transaction)}
-                            >
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Delete</span>
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this transaction? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteTransaction(transaction)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 

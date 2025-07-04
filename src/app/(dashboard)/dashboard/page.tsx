@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowDownIcon, ArrowUpIcon, CreditCard, DollarSign, ShoppingBag, TrendingDown } from "lucide-react"
@@ -10,14 +10,46 @@ import { TopVendors } from "@/components/charts/top-vendors"
 import { PdfExport } from "@/components/pdf-export"
 import { CurrencyToggle } from "@/components/currency-toggle"
 import { formatCurrency, convertCurrency, type CurrencyCode } from "@/lib/currency"
+import { getDashboardStats } from "@/services/api"
+import type { DashboardStats } from "@/types"
+
+function getDateRangeForTab(tab: string): { from: string; to: string } {
+  const now = new Date()
+  let from: Date
+  if (tab === "7days") {
+    from = new Date(now)
+    from.setDate(now.getDate() - 6)
+  } else if (tab === "30days") {
+    from = new Date(now)
+    from.setDate(now.getDate() - 29)
+  } else {
+    // Default to last 30 days
+    from = new Date(now)
+    from.setDate(now.getDate() - 29)
+  }
+  return {
+    from: from.toISOString().slice(0, 10),
+    to: now.toISOString().slice(0, 10),
+  }
+}
 
 export default function Dashboard() {
   const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>("USD")
+  const [tab, setTab] = useState("30days")
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Sample data with mixed currencies
-  const totalSpendingUSD = 2456.78
-  const totalSpendingCRC = convertCurrency(totalSpendingUSD, "USD", "CRC")
-  const displayAmount = displayCurrency === "USD" ? totalSpendingUSD : totalSpendingCRC
+  useEffect(() => {
+    const { from, to } = getDateRangeForTab(tab)
+    setLoading(true)
+    getDashboardStats({ from, to })
+      .then(setStats)
+      .catch(error => {
+        console.error('Failed to fetch dashboard stats:', error)
+        setStats(null)
+      })
+      .finally(() => setLoading(false))
+  }, [tab])
 
   return (
     <div className="space-y-6">
@@ -33,119 +65,177 @@ export default function Dashboard() {
       </div>
 
       <div id="dashboard-content" className="space-y-6">
-        <Tabs defaultValue="30days">
+        <Tabs value={tab} onValueChange={setTab} defaultValue="30days">
           <TabsList>
             <TabsTrigger value="7days">Last 7 days</TabsTrigger>
             <TabsTrigger value="30days">Last 30 days</TabsTrigger>
-            <TabsTrigger value="custom">Custom</TabsTrigger>
+            <TabsTrigger value="custom" disabled>Custom</TabsTrigger>
           </TabsList>
           <TabsContent value="7days" className="space-y-4">
-            {/* 7 days content would go here */}
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            ) : stats && (
+              <>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                  <Card className="col-span-4">
+                    <CardHeader>
+                      <CardTitle>Daily Spending Trend</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                      <DailySpendingTrend data={stats.daily_spending_trend} />
+                    </CardContent>
+                  </Card>
+                  <Card className="col-span-3">
+                    <CardHeader>
+                      <CardTitle>Spending by Category</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                      <SpendingByCategory data={stats.spending_by_category} />
+                    </CardContent>
+                  </Card>
+                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Vendors</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TopVendors data={stats.top_vendors} />
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </TabsContent>
           <TabsContent value="30days" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-              <Card className="col-span-4">
-                <CardHeader>
-                  <CardTitle>Daily Spending Trend</CardTitle>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                  <DailySpendingTrend />
-                </CardContent>
-              </Card>
-              <Card className="col-span-3">
-                <CardHeader>
-                  <CardTitle>Spending by Category</CardTitle>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                  <SpendingByCategory />
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Vendors</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <TopVendors />
-              </CardContent>
-            </Card>
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            ) : stats && (
+              <>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                  <Card className="col-span-4">
+                    <CardHeader>
+                      <CardTitle>Daily Spending Trend</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                      <DailySpendingTrend data={stats.daily_spending_trend} />
+                    </CardContent>
+                  </Card>
+                  <Card className="col-span-3">
+                    <CardHeader>
+                      <CardTitle>Spending by Category</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                      <SpendingByCategory data={stats.spending_by_category} />
+                    </CardContent>
+                  </Card>
+                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Vendors</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TopVendors data={stats.top_vendors} />
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </TabsContent>
           <TabsContent value="custom" className="space-y-4">
-            {/* Custom date range content would go here */}
+            <div className="text-center py-8 text-muted-foreground">Custom date range coming soon…</div>
           </TabsContent>
         </Tabs>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Spending</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(displayAmount, displayCurrency)}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-red-500 inline-flex items-center">
-                  <TrendingDown className="mr-1 h-3 w-3" />
-                  +12.5%
-                </span>{" "}
-                from last month
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Largest Category</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Groceries</div>
-              <p className="text-xs text-muted-foreground">
-                {formatCurrency(
-                  displayCurrency === "USD" ? 543.21 : convertCurrency(543.21, "USD", "CRC"),
-                  displayCurrency,
-                )}{" "}
-                (22%)
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">42</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-500 inline-flex items-center">
-                  <ArrowDownIcon className="mr-1 h-3 w-3" />
-                  -8%
-                </span>{" "}
-                from last month
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Transaction</CardTitle>
-              <ArrowUpIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(
-                  displayCurrency === "USD" ? 58.49 : convertCurrency(58.49, "USD", "CRC"),
-                  displayCurrency,
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-500 inline-flex items-center">
-                  <ArrowDownIcon className="mr-1 h-3 w-3" />
-                  -2.3%
-                </span>{" "}
-                from last month
-              </p>
-            </CardContent>
-          </Card>
+          {loading || !stats ? (
+            <>
+              <Card><CardContent className="py-8 text-center text-muted-foreground">Loading…</CardContent></Card>
+              <Card><CardContent className="py-8 text-center text-muted-foreground">Loading…</CardContent></Card>
+              <Card><CardContent className="py-8 text-center text-muted-foreground">Loading…</CardContent></Card>
+              <Card><CardContent className="py-8 text-center text-muted-foreground">Loading…</CardContent></Card>
+            </>
+          ) : (
+            <>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Spending</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatCurrency(
+                    displayCurrency === "USD"
+                      ? stats.summary.total_spending
+                      : convertCurrency(stats.summary.total_spending, "USD", displayCurrency),
+                    displayCurrency
+                  )}</div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-red-500 inline-flex items-center">
+                      <TrendingDown className="mr-1 h-3 w-3" />
+                      {stats.summary.trend.total_spending_pct_change > 0 ? '+' : ''}
+                      {stats.summary.trend.total_spending_pct_change}%
+                    </span>{' '}
+                    from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Largest Category</CardTitle>
+                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.summary.largest_category.name}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {formatCurrency(
+                      displayCurrency === "USD"
+                        ? stats.summary.largest_category.amount
+                        : convertCurrency(stats.summary.largest_category.amount, "USD", displayCurrency),
+                      displayCurrency
+                    )} ( {stats.summary.largest_category.percent}% )
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Transactions</CardTitle>
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.summary.transaction_count}</div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-green-500 inline-flex items-center">
+                      <ArrowDownIcon className="mr-1 h-3 w-3" />
+                      {stats.summary.trend.transaction_count_pct_change > 0 ? '+' : ''}
+                      {stats.summary.trend.transaction_count_pct_change}%
+                    </span>{' '}
+                    from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Average Transaction</CardTitle>
+                  <ArrowUpIcon className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(
+                      displayCurrency === "USD"
+                        ? stats.summary.average_transaction
+                        : convertCurrency(stats.summary.average_transaction, "USD", displayCurrency),
+                      displayCurrency
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-green-500 inline-flex items-center">
+                      <ArrowDownIcon className="mr-1 h-3 w-3" />
+                      {stats.summary.trend.average_transaction_pct_change > 0 ? '+' : ''}
+                      {stats.summary.trend.average_transaction_pct_change}%
+                    </span>{' '}
+                    from last month
+                  </p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
       </div>
     </div>
