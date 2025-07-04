@@ -126,10 +126,14 @@ export async function deleteTransaction(id: number): Promise<void> {
 export async function getDashboardStats(params: {
   from: string;
   to: string;
+  currency?: string;
 }): Promise<DashboardStats> {
   const query = new URLSearchParams();
   query.append('from', params.from);
   query.append('to', params.to);
+  if (params.currency) {
+    query.append('currency', params.currency);
+  }
   const { data } = await api.get<DashboardStats>(`/api/dashboard/stats?${query.toString()}`);
   return data;
 }

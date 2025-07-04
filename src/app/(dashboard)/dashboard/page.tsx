@@ -9,7 +9,7 @@ import { DailySpendingTrend } from "@/components/charts/daily-spending-trend"
 import { TopVendors } from "@/components/charts/top-vendors"
 import { PdfExport } from "@/components/pdf-export"
 import { CurrencyToggle } from "@/components/currency-toggle"
-import { formatCurrency, convertCurrency, type CurrencyCode } from "@/lib/currency"
+import { formatCurrency, type CurrencyCode } from "@/lib/currency"
 import { getDashboardStats } from "@/services/api"
 import type { DashboardStats } from "@/types"
 
@@ -42,14 +42,14 @@ export default function Dashboard() {
   useEffect(() => {
     const { from, to } = getDateRangeForTab(tab)
     setLoading(true)
-    getDashboardStats({ from, to })
+    getDashboardStats({ from, to, currency: displayCurrency })
       .then(setStats)
       .catch(error => {
         console.error('Failed to fetch dashboard stats:', error)
         setStats(null)
       })
       .finally(() => setLoading(false))
-  }, [tab])
+  }, [tab, displayCurrency])
 
   return (
     <div className="space-y-6">
@@ -71,74 +71,42 @@ export default function Dashboard() {
             <TabsTrigger value="30days">Last 30 days</TabsTrigger>
             <TabsTrigger value="custom" disabled>Custom</TabsTrigger>
           </TabsList>
-          <TabsContent value="7days" className="space-y-4">
-            {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : stats && (
-              <>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                  <Card className="col-span-4">
+          {(tab === "7days" || tab === "30days") && (
+            <TabsContent value={tab} className="space-y-4">
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              ) : stats && (
+                <>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                    <Card className="col-span-4">
+                      <CardHeader>
+                        <CardTitle>Daily Spending Trend</CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-[300px]">
+                        <DailySpendingTrend data={stats.daily_spending_trend} />
+                      </CardContent>
+                    </Card>
+                    <Card className="col-span-3">
+                      <CardHeader>
+                        <CardTitle>Spending by Category</CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-[300px]">
+                        <SpendingByCategory data={stats.spending_by_category} />
+                      </CardContent>
+                    </Card>
+                  </div>
+                  <Card>
                     <CardHeader>
-                      <CardTitle>Daily Spending Trend</CardTitle>
+                      <CardTitle>Top Vendors</CardTitle>
                     </CardHeader>
-                    <CardContent className="h-[300px]">
-                      <DailySpendingTrend data={stats.daily_spending_trend} />
+                    <CardContent>
+                      <TopVendors data={stats.top_vendors} />
                     </CardContent>
                   </Card>
-                  <Card className="col-span-3">
-                    <CardHeader>
-                      <CardTitle>Spending by Category</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[300px]">
-                      <SpendingByCategory data={stats.spending_by_category} />
-                    </CardContent>
-                  </Card>
-                </div>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Top Vendors</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TopVendors data={stats.top_vendors} />
-                  </CardContent>
-                </Card>
-              </>
-            )}
-          </TabsContent>
-          <TabsContent value="30days" className="space-y-4">
-            {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : stats && (
-              <>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                  <Card className="col-span-4">
-                    <CardHeader>
-                      <CardTitle>Daily Spending Trend</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[300px]">
-                      <DailySpendingTrend data={stats.daily_spending_trend} />
-                    </CardContent>
-                  </Card>
-                  <Card className="col-span-3">
-                    <CardHeader>
-                      <CardTitle>Spending by Category</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[300px]">
-                      <SpendingByCategory data={stats.spending_by_category} />
-                    </CardContent>
-                  </Card>
-                </div>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Top Vendors</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TopVendors data={stats.top_vendors} />
-                  </CardContent>
-                </Card>
-              </>
-            )}
-          </TabsContent>
+                </>
+              )}
+            </TabsContent>
+          )}
           <TabsContent value="custom" className="space-y-4">
             <div className="text-center py-8 text-muted-foreground">Custom date range coming soon…</div>
           </TabsContent>
@@ -161,9 +129,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatCurrency(
-                    displayCurrency === "USD"
-                      ? stats.summary.total_spending
-                      : convertCurrency(stats.summary.total_spending, "USD", displayCurrency),
+                    stats.summary.total_spending,
                     displayCurrency
                   )}</div>
                   <p className="text-xs text-muted-foreground">
@@ -185,9 +151,7 @@ export default function Dashboard() {
                   <div className="text-2xl font-bold">{stats.summary.largest_category.name}</div>
                   <p className="text-xs text-muted-foreground">
                     {formatCurrency(
-                      displayCurrency === "USD"
-                        ? stats.summary.largest_category.amount
-                        : convertCurrency(stats.summary.largest_category.amount, "USD", displayCurrency),
+                      stats.summary.largest_category.amount,
                       displayCurrency
                     )} ( {stats.summary.largest_category.percent}% )
                   </p>
@@ -218,9 +182,7 @@ export default function Dashboard() {
                 <CardContent>
                   <div className="text-2xl font-bold">
                     {formatCurrency(
-                      displayCurrency === "USD"
-                        ? stats.summary.average_transaction
-                        : convertCurrency(stats.summary.average_transaction, "USD", displayCurrency),
+                      stats.summary.average_transaction,
                       displayCurrency
                     )}
                   </div>
