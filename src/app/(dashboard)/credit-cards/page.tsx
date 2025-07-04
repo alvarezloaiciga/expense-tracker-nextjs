@@ -139,12 +139,10 @@ export default function CreditCardsPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Total Expenses</span>
-                  <span className="font-semibold flex flex-col items-end gap-1">
+                  <span className="font-semibold flex flex-col items-end gap-0">
                     {Object.entries(card.expenses_by_currency).length > 0 ? (
                       Object.entries(card.expenses_by_currency).map(([currency, amount]) => (
-                        <span key={currency}>
-                          {currency}: {formatCurrency(amount, currency as any)}
-                        </span>
+                        <span key={currency}> {formatCurrency(amount, currency as any)} </span>
                       ))
                     ) : (
                       <span>-</span>
