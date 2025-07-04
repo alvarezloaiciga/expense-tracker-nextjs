@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -6,8 +9,12 @@ import { CategoryBreakdownOverTime } from "@/components/charts/category-breakdow
 import { CardUsageComparison } from "@/components/charts/card-usage-comparison"
 import { Download, Share2 } from "lucide-react"
 import { PdfExport } from "@/components/pdf-export"
+import { CurrencyToggle } from "@/components/currency-toggle"
+import { type CurrencyCode } from "@/lib/currency"
 
 export default function AnalyticsPage() {
+  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>("USD")
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
@@ -16,6 +23,7 @@ export default function AnalyticsPage() {
           <p className="text-muted-foreground">Detailed insights into your spending patterns</p>
         </div>
         <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
+          <CurrencyToggle currentCurrency={displayCurrency} onCurrencyChange={setDisplayCurrency} />
           <PdfExport elementId="analytics-content" fileName="finance-analytics.pdf" />
           <Button variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />
@@ -42,7 +50,7 @@ export default function AnalyticsPage() {
                 <CardTitle>Monthly Spending Comparison</CardTitle>
               </CardHeader>
               <CardContent className="h-[500px]">
-                <MonthlySpendingComparison />
+                <MonthlySpendingComparison currency={displayCurrency} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -53,7 +61,7 @@ export default function AnalyticsPage() {
                 <CardTitle>Category Breakdown Over Time</CardTitle>
               </CardHeader>
               <CardContent className="h-[500px]">
-                <CategoryBreakdownOverTime />
+                <CategoryBreakdownOverTime currency={displayCurrency} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -64,7 +72,7 @@ export default function AnalyticsPage() {
                 <CardTitle>Card Usage Comparison</CardTitle>
               </CardHeader>
               <CardContent className="h-[500px]">
-                <CardUsageComparison />
+                <CardUsageComparison currency={displayCurrency} />
               </CardContent>
             </Card>
           </TabsContent>

@@ -83,7 +83,7 @@ export default function Dashboard() {
                         <CardTitle>Daily Spending Trend</CardTitle>
                       </CardHeader>
                       <CardContent className="h-[300px]">
-                        <DailySpendingTrend data={stats.daily_spending_trend} />
+                        <DailySpendingTrend data={stats.daily_spending_trend} currency={displayCurrency} />
                       </CardContent>
                     </Card>
                     <Card className="col-span-3">
@@ -91,7 +91,7 @@ export default function Dashboard() {
                         <CardTitle>Spending by Category</CardTitle>
                       </CardHeader>
                       <CardContent className="h-[300px]">
-                        <SpendingByCategory data={stats.spending_by_category} />
+                        <SpendingByCategory data={stats.spending_by_category} currency={displayCurrency} />
                       </CardContent>
                     </Card>
                   </div>
@@ -100,7 +100,7 @@ export default function Dashboard() {
                       <CardTitle>Top Vendors</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <TopVendors data={stats.top_vendors} />
+                      <TopVendors data={stats.top_vendors} currency={displayCurrency} />
                     </CardContent>
                   </Card>
                 </>
