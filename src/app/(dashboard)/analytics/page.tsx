@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -10,10 +10,20 @@ import { CardUsageComparison } from "@/components/charts/card-usage-comparison"
 import { Download, Share2 } from "lucide-react"
 import { PdfExport } from "@/components/pdf-export"
 import { CurrencyToggle } from "@/components/currency-toggle"
+import { useSettings } from "@/hooks/useSettings"
 import { type CurrencyCode } from "@/lib/currency"
 
 export default function AnalyticsPage() {
-  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>("USD")
+  const { defaultCurrency, enabledCurrencies } = useSettings()
+  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>(defaultCurrency)
+
+  // Update display currency when default currency changes
+  useEffect(() => {
+    setDisplayCurrency(defaultCurrency)
+  }, [defaultCurrency])
+
+  // If no enabled currencies, don't render currency toggle
+  const showCurrencyToggle = enabledCurrencies && enabledCurrencies.length > 1
 
   return (
     <div className="space-y-6">
@@ -23,7 +33,9 @@ export default function AnalyticsPage() {
           <p className="text-muted-foreground">Detailed insights into your spending patterns</p>
         </div>
         <div className="mt-4 md:mt-0 flex flex-wrap gap-2">
-          <CurrencyToggle currentCurrency={displayCurrency} onCurrencyChange={setDisplayCurrency} />
+          {showCurrencyToggle && (
+            <CurrencyToggle currentCurrency={displayCurrency} onCurrencyChange={setDisplayCurrency} />
+          )}
           <PdfExport elementId="analytics-content" fileName="finance-analytics.pdf" />
           <Button variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />

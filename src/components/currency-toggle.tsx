@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ChevronDown } from "lucide-react"
 import { CURRENCIES, type CurrencyCode } from "@/lib/currency"
+import { useSettings } from "@/hooks/useSettings"
 
 interface CurrencyToggleProps {
   currentCurrency: CurrencyCode
@@ -10,6 +11,13 @@ interface CurrencyToggleProps {
 }
 
 export function CurrencyToggle({ currentCurrency, onCurrencyChange }: CurrencyToggleProps) {
+  const { enabledCurrencies } = useSettings()
+
+  // Don't render if there are no enabled currencies or only one
+  if (!enabledCurrencies || enabledCurrencies.length <= 1) {
+    return null
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -19,15 +27,18 @@ export function CurrencyToggle({ currentCurrency, onCurrencyChange }: CurrencyTo
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {Object.entries(CURRENCIES).map(([code, info]) => (
-          <DropdownMenuItem
-            key={code}
-            onClick={() => onCurrencyChange(code as CurrencyCode)}
-            className={currentCurrency === code ? "bg-accent" : ""}
-          >
-            {info.symbol} {info.name} ({info.code})
-          </DropdownMenuItem>
-        ))}
+        {enabledCurrencies.map((code) => {
+          const info = CURRENCIES[code]
+          return (
+            <DropdownMenuItem
+              key={code}
+              onClick={() => onCurrencyChange(code)}
+              className={currentCurrency === code ? "bg-accent" : ""}
+            >
+              {info.symbol} {info.name} ({info.code})
+            </DropdownMenuItem>
+          )
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   )

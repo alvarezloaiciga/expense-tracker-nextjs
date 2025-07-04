@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Pencil, Trash2, CreditCard as CreditCardIcon } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { formatCurrency } from "@/lib/currency"
+import { useSettings } from "@/hooks/useSettings"
 import api from '@/services/api'
 
 const BRANDS = [
@@ -28,6 +30,7 @@ function getBrandLogo(brand: string) {
 
 export default function CreditCardsPage() {
   const queryClient = useQueryClient()
+  const { defaultCurrency } = useSettings()
   const { data: cards = [], isLoading } = useQuery({
     queryKey: ["credit-cards"],
     queryFn: api.getCreditCards,
@@ -51,8 +54,6 @@ export default function CreditCardsPage() {
           name: card.name!,
           last_four_digits: card.last_four_digits!,
           brand: card.brand!,
-          limit: Number(card.limit),
-          balance: Number(card.balance),
         })
       }
     },
@@ -133,20 +134,22 @@ export default function CreditCardsPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Brand</span>
-                  <span className="flex items-center">{getBrandLogo(card.brand)}<span>{card.brand}</span></span>
-                </div>
-                <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Last 4</span>
                   <span className="font-mono">{card.last_four_digits}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Limit</span>
-                  <span>${card.limit.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Balance</span>
-                  <span>${card.balance.toLocaleString()}</span>
+                  <span className="text-sm text-muted-foreground">Total Expenses</span>
+                  <span className="font-semibold flex flex-col items-end gap-1">
+                    {Object.entries(card.expenses_by_currency).length > 0 ? (
+                      Object.entries(card.expenses_by_currency).map(([currency, amount]) => (
+                        <span key={currency}>
+                          {currency}: {formatCurrency(amount, currency as any)}
+                        </span>
+                      ))
+                    ) : (
+                      <span>-</span>
+                    )}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -183,14 +186,6 @@ export default function CreditCardsPage() {
             <div>
               <Label htmlFor="last_four_digits">Last 4 Digits</Label>
               <Input name="last_four_digits" id="last_four_digits" value={form.last_four_digits || ""} maxLength={4} onChange={handleFormChange} required />
-            </div>
-            <div>
-              <Label htmlFor="limit">Limit</Label>
-              <Input name="limit" id="limit" type="number" value={form.limit || ""} onChange={handleFormChange} required />
-            </div>
-            <div>
-              <Label htmlFor="balance">Balance</Label>
-              <Input name="balance" id="balance" type="number" value={form.balance || ""} onChange={handleFormChange} required />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

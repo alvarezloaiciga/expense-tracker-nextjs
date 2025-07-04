@@ -19,6 +19,7 @@ import type { Transaction, Category, CreditCard } from "@/types"
 import { useToast } from "@/../../hooks/use-toast"
 import { format } from "date-fns"
 import { Pagination } from "@/components/ui/pagination"
+import { useSettings } from "@/hooks/useSettings"
 
 export default function TransactionsPage() {
   const router = useRouter()
@@ -39,10 +40,19 @@ export default function TransactionsPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [creditCards, setCreditCards] = useState<CreditCard[]>([])
   const [loading, setLoading] = useState(true)
-  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>("USD")
+  const { defaultCurrency, enabledCurrencies } = useSettings()
+  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>(defaultCurrency)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const { toast } = useToast()
+
+  // Update display currency when default currency changes
+  useEffect(() => {
+    setDisplayCurrency(defaultCurrency)
+  }, [defaultCurrency])
+
+  // If no enabled currencies, don't render currency toggle
+  const showCurrencyToggle = enabledCurrencies && enabledCurrencies.length > 1
   
   const getCategoryId = () => {
     if (selectedCategory === "All Categories" || selectedCategory === "Uncategorized") return undefined;
@@ -301,7 +311,9 @@ export default function TransactionsPage() {
           <p className="text-muted-foreground">View and manage your transaction history</p>
         </div>
         <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-2">
-          <CurrencyToggle currentCurrency={displayCurrency} onCurrencyChange={setDisplayCurrency} />
+          {showCurrencyToggle && (
+            <CurrencyToggle currentCurrency={displayCurrency} onCurrencyChange={setDisplayCurrency} />
+          )}
           <Button variant="outline" size="sm">
             Export CSV
           </Button>

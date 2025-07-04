@@ -2,6 +2,15 @@ export interface User {
   id: number;
   email: string;
   name?: string;
+  default_currency?: string;
+  preferred_theme?: string;
+}
+
+export interface UserSettings {
+  name: string;
+  default_currency: string;
+  preferred_theme: string;
+  enabled_currencies: string[];
 }
 
 export interface AuthResponse {
@@ -19,8 +28,7 @@ export interface CreditCard {
   name: string;
   last_four_digits: string;
   brand: string;
-  limit: number;
-  balance: number;
+  expenses_by_currency: Record<string, number>;
 }
 
 export interface Category {

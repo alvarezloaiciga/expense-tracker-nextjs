@@ -11,6 +11,7 @@ import { PdfExport } from "@/components/pdf-export"
 import { CurrencyToggle } from "@/components/currency-toggle"
 import { formatCurrency, type CurrencyCode } from "@/lib/currency"
 import { getDashboardStats } from "@/services/api"
+import { useSettings } from "@/hooks/useSettings"
 import type { DashboardStats } from "@/types"
 
 function getDateRangeForTab(tab: string): { from: string; to: string } {
@@ -34,10 +35,19 @@ function getDateRangeForTab(tab: string): { from: string; to: string } {
 }
 
 export default function Dashboard() {
-  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>("USD")
+  const { defaultCurrency, enabledCurrencies } = useSettings()
+  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>(defaultCurrency)
   const [tab, setTab] = useState("30days")
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Update display currency when default currency changes
+  useEffect(() => {
+    setDisplayCurrency(defaultCurrency)
+  }, [defaultCurrency])
+
+  // If no enabled currencies, don't render currency toggle
+  const showCurrencyToggle = enabledCurrencies && enabledCurrencies.length > 1
 
   useEffect(() => {
     const { from, to } = getDateRangeForTab(tab)
@@ -59,7 +69,9 @@ export default function Dashboard() {
           <p className="text-muted-foreground">Your financial overview and insights</p>
         </div>
         <div className="flex gap-2">
-          <CurrencyToggle currentCurrency={displayCurrency} onCurrencyChange={setDisplayCurrency} />
+          {showCurrencyToggle && (
+            <CurrencyToggle currentCurrency={displayCurrency} onCurrencyChange={setDisplayCurrency} />
+          )}
           <PdfExport elementId="dashboard-content" fileName="finance-dashboard.pdf" />
         </div>
       </div>

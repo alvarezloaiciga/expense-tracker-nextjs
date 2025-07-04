@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "../globals.css"
 import { Providers } from '../lib/providers'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ThemeInitializer } from '@/components/theme-initializer'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -29,6 +30,7 @@ export default function RootLayout({
             disableTransitionOnChange
             storageKey="finance-ai-theme"
           >
+            <ThemeInitializer />
             {children}
           </ThemeProvider>
         </Providers>

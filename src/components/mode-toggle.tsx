@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useSettings } from "@/hooks/useSettings"
 
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function ModeToggle() {
   const { theme, setTheme } = useTheme()
+  const { setPreferredTheme } = useSettings()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -27,11 +28,20 @@ export function ModeToggle() {
   const isDark = theme === "dark"
   const nextTheme = isDark ? "light" : "dark"
 
+  const handleThemeChange = async () => {
+    setTheme(nextTheme)
+    try {
+      await setPreferredTheme(nextTheme)
+    } catch (error) {
+      console.error("Failed to save theme preference:", error)
+    }
+  }
+
   return (
     <Button
       variant="outline"
       size="icon"
-      onClick={() => setTheme(nextTheme)}
+      onClick={handleThemeChange}
       aria-label="Toggle theme"
     >
       {isDark ? (

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AuthResponse, User, CreditCard, Category, Transaction, DashboardStats } from '@/types';
+import type { AuthResponse, User, UserSettings, CreditCard, Category, Transaction, DashboardStats } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -46,13 +46,24 @@ export async function getCurrentUser(): Promise<User> {
   return data;
 }
 
+// --- Settings API ---
+export async function getUserSettings(): Promise<UserSettings> {
+  const { data } = await api.get<UserSettings>('/api/settings');
+  return data;
+}
+
+export async function updateUserSettings(settings: UserSettings): Promise<UserSettings> {
+  const { data } = await api.put<UserSettings>('/api/settings', { settings });
+  return data;
+}
+
 // --- Credit Cards API ---
 export async function getCreditCards(): Promise<CreditCard[]> {
   const { data } = await api.get<CreditCard[]>('/api/credit_cards');
   return data;
 }
 
-export async function createCreditCard(card: Omit<CreditCard, 'id'>): Promise<CreditCard> {
+export async function createCreditCard(card: Omit<CreditCard, 'id' | 'expenses'>): Promise<CreditCard> {
   const { data } = await api.post<CreditCard>('/api/credit_cards', card);
   return data;
 }
@@ -150,6 +161,8 @@ export default {
   login,
   signup,
   getCurrentUser,
+  getUserSettings,
+  updateUserSettings,
   getCreditCards,
   createCreditCard,
   updateCreditCard,
