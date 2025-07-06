@@ -54,6 +54,8 @@ export interface Transaction {
   transaction_date: string; // ISO string
   authorization_code?: string;
   transaction_type: "EXPENSE" | "INCOME";
+  refund_amount?: string; // using string for decimal precision
+  refunded_at?: string; // ISO string
   created_at: string; // ISO string
   updated_at: string; // ISO string
   email_content?: string;

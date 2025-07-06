@@ -31,6 +31,8 @@ const transactionSchema = z.object({
   }),
   authorization_code: z.string().optional(),
   transaction_type: z.enum(["EXPENSE", "INCOME"]),
+  refund_amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid refund amount format").optional(),
+  refunded_at: z.date().optional(),
 })
 
 type TransactionFormData = z.infer<typeof transactionSchema>
@@ -105,6 +107,9 @@ export function TransactionDialog({
   const [date, setDate] = useState<Date | undefined>(
     transaction?.transaction_date ? new Date(transaction.transaction_date) : new Date()
   )
+  const [refundDate, setRefundDate] = useState<Date | undefined>(
+    transaction?.refunded_at ? new Date(transaction.refunded_at) : undefined
+  )
 
   const {
     register,
@@ -127,6 +132,8 @@ export function TransactionDialog({
       transaction_date: transaction?.transaction_date ? new Date(transaction.transaction_date) : new Date(),
       authorization_code: transaction?.authorization_code || "",
       transaction_type: transaction?.transaction_type || "EXPENSE",
+      refund_amount: transaction?.refund_amount || "",
+      refunded_at: transaction?.refunded_at ? new Date(transaction.refunded_at) : undefined,
     },
   })
 
@@ -146,10 +153,14 @@ export function TransactionDialog({
       setValue("transaction_date", new Date(transaction.transaction_date))
       setValue("authorization_code", transaction.authorization_code || "")
       setValue("transaction_type", transaction.transaction_type)
+      setValue("refund_amount", transaction.refund_amount || "")
+      setValue("refunded_at", transaction.refunded_at ? new Date(transaction.refunded_at) : undefined)
       setDate(new Date(transaction.transaction_date))
+      setRefundDate(transaction.refunded_at ? new Date(transaction.refunded_at) : undefined)
     } else {
       reset()
       setDate(new Date())
+      setRefundDate(undefined)
     }
   }, [transaction, setValue, reset])
 
@@ -171,6 +182,15 @@ export function TransactionDialog({
     setDate(selectedDate)
     if (selectedDate) {
       setValue("transaction_date", selectedDate)
+    }
+  }
+
+  const handleRefundDateSelect = (selectedDate: Date | undefined) => {
+    setRefundDate(selectedDate)
+    if (selectedDate) {
+      setValue("refunded_at", selectedDate)
+    } else {
+      setValue("refunded_at", undefined)
     }
   }
 
@@ -390,7 +410,52 @@ export function TransactionDialog({
             />
           </div>
 
+          {/* Refund Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Refund Amount */}
+            <div className="space-y-2">
+              <Label htmlFor="refund_amount">Refund Amount</Label>
+              <Input
+                id="refund_amount"
+                {...register("refund_amount")}
+                placeholder="0.00"
+                type="text"
+              />
+              {errors.refund_amount && (
+                <p className="text-sm text-red-500">{errors.refund_amount.message}</p>
+              )}
+            </div>
 
+            {/* Refund Date */}
+            <div className="space-y-2">
+              <Label>Refund Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !refundDate && "text-muted-foreground"
+                    )}
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {refundDate ? format(refundDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={refundDate}
+                    onSelect={handleRefundDateSelect}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              {errors.refunded_at && (
+                <p className="text-sm text-red-500">{errors.refunded_at.message}</p>
+              )}
+            </div>
+          </div>
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button

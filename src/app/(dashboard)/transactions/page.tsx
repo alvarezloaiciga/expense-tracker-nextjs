@@ -212,6 +212,26 @@ export default function TransactionsPage() {
     return formatCurrency(amount, transaction.currency as CurrencyCode)
   }
 
+  const getDisplayRefundAmount = (transaction: Transaction) => {
+    if (!transaction.refund_amount) return null
+    const refundAmount = parseFloat(transaction.refund_amount)
+    if (transaction.currency === displayCurrency) {
+      return formatCurrency(refundAmount, transaction.currency as CurrencyCode)
+    }
+
+    const convertedRefundAmount = convertCurrency(refundAmount, transaction.currency as CurrencyCode, displayCurrency)
+    return formatCurrency(convertedRefundAmount, displayCurrency)
+  }
+
+  const getOriginalRefundAmount = (transaction: Transaction) => {
+    if (!transaction.refund_amount) return null
+    const refundAmount = parseFloat(transaction.refund_amount)
+    if (transaction.currency === displayCurrency) {
+      return null
+    }
+    return formatCurrency(refundAmount, transaction.currency as CurrencyCode)
+  }
+
   const handleCreateTransaction = async (data: any) => {
     try {
       const newTransaction = await createTransaction({
@@ -450,6 +470,21 @@ export default function TransactionsPage() {
                           {getOriginalAmount(transaction) && (
                             <div className="text-sm text-muted-foreground">
                               {getOriginalAmount(transaction)}
+                            </div>
+                          )}
+                          {transaction.refund_amount && (
+                            <div className="text-sm text-green-600 font-medium">
+                              Refund: {getDisplayRefundAmount(transaction)}
+                            </div>
+                          )}
+                          {transaction.refund_amount && getOriginalRefundAmount(transaction) && (
+                            <div className="text-xs text-muted-foreground">
+                              {getOriginalRefundAmount(transaction)}
+                            </div>
+                          )}
+                          {transaction.refunded_at && (
+                            <div className="text-xs text-muted-foreground">
+                              Refunded: {format(new Date(transaction.refunded_at), "MMM dd, yyyy")}
                             </div>
                           )}
                         </div>
