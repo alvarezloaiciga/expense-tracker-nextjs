@@ -20,6 +20,37 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle response errors globally
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Don't redirect on network errors (like when backend is not running)
+    if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+      console.log('Network error - backend server may not be running');
+      return Promise.reject(error);
+    }
+    
+    if (error.response?.status === 401) {
+      // Clear invalid token
+      clearAuthTokens();
+      // Only redirect if we're not already on the home page
+      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Helper function to clear auth tokens
+const clearAuthTokens = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('auth-token');
+    // Clear cookie with same path
+    document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  }
+};
+
 // Helper function to set token in both localStorage and cookies
 const setAuthToken = (token: string) => {
   if (typeof window !== 'undefined') {
@@ -150,11 +181,7 @@ export async function getDashboardStats(params: {
 }
 
 export function logout() {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth-token');
-    // Clear cookie with same path
-    document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-  }
+  clearAuthTokens();
 }
 
 export default {

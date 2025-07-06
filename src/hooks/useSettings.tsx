@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { getUserSettings, updateUserSettings } from '@/services/api'
 import { type UserSettings } from '@/types'
 import { type CurrencyCode } from '@/lib/currency'
+import { useAuth } from './useAuth'
 
 interface SettingsContextType {
   settings: UserSettings | null
@@ -21,18 +22,30 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [loading, setLoading] = useState(true)
+  const { user, isAuthenticated } = useAuth()
 
-  // Load settings on mount
+  // Load settings only when user is authenticated
   useEffect(() => {
-    loadSettings()
-  }, [])
+    if (isAuthenticated && user) {
+      loadSettings()
+    } else if (!isAuthenticated) {
+      // Set default settings when not authenticated
+      setSettings({
+        name: '',
+        default_currency: 'USD',
+        preferred_theme: 'light',
+        enabled_currencies: ['USD']
+      })
+      setLoading(false)
+    }
+  }, [isAuthenticated, user])
 
   const loadSettings = async () => {
     try {
       setLoading(true)
       const userSettings = await getUserSettings()
       setSettings(userSettings)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load user settings:', error)
       // Set default settings if API fails
       setSettings({
@@ -47,7 +60,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }
 
   const updateSettings = async (newSettings: Partial<UserSettings>) => {
-    if (!settings) return
+    if (!settings || !isAuthenticated) return
 
     try {
       const updatedSettings = { ...settings, ...newSettings }
@@ -60,11 +73,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }
 
   const setDefaultCurrency = async (currency: CurrencyCode) => {
-    await updateSettings({ default_currency: currency })
+    if (isAuthenticated) {
+      await updateSettings({ default_currency: currency })
+    }
   }
 
   const setPreferredTheme = async (theme: string) => {
-    await updateSettings({ preferred_theme: theme })
+    if (isAuthenticated) {
+      await updateSettings({ preferred_theme: theme })
+    }
   }
 
   const value: SettingsContextType = {

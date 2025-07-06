@@ -15,8 +15,13 @@ export function useAuth() {
     staleTime: 5 * 60 * 1000, // 5 minutes
     // Don't refetch on window focus if we get a 401
     refetchOnWindowFocus: false,
-    // Handle 401 errors gracefully
+    // Handle errors gracefully
     onError: (error: any) => {
+      // Don't handle network errors (backend not running)
+      if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
+        return;
+      }
+      
       if (error?.response?.status === 401) {
         // Clear invalid token
         api.logout()
