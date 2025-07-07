@@ -23,6 +23,7 @@ import { useSettings } from "@/hooks/useSettings"
 export default function TransactionsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const isMountedRef = useRef(false)
 
   // Local state for all filters/search/pagination
   const [searchTerm, setSearchTerm] = useState("")
@@ -80,6 +81,7 @@ export default function TransactionsPage() {
 
   // On mount, initialize local state from URL
   useEffect(() => {
+    isMountedRef.current = true
     const params = new URLSearchParams(window.location.search)
     setSearchTerm(params.get("search") || "")
     setSelectedCategory(params.get("category") || "All Categories")
@@ -90,6 +92,10 @@ export default function TransactionsPage() {
       current_page: parseInt(params.get("page") || "1"),
       per_page: parseInt(params.get("perPage") || "20"),
     }))
+    
+    return () => {
+      isMountedRef.current = false
+    }
   }, [])
 
   // Listen for popstate (back/forward navigation) and sync local state
@@ -110,22 +116,50 @@ export default function TransactionsPage() {
     return () => window.removeEventListener("popstate", onPopState)
   }, [])
 
-  // Debounced URL update
+  // Debounced URL update with rate limiting
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const lastUpdateRef = useRef<number>(0)
+  const updateCountRef = useRef<number>(0)
+  
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
+    
     debounceRef.current = setTimeout(() => {
-      const params = new URLSearchParams()
-      if (searchTerm) params.set("search", searchTerm)
-      if (selectedCategory && selectedCategory !== "All Categories") params.set("category", selectedCategory)
-      if (selectedCard && selectedCard !== "All Cards") params.set("card", selectedCard)
-      if (selectedDateRange && selectedDateRange !== "All") params.set("dateRange", selectedDateRange)
-      if (pagination.current_page !== 1) params.set("page", String(pagination.current_page))
-      if (pagination.per_page !== 20) params.set("perPage", String(pagination.per_page))
-      const url = params.toString() ? `?${params.toString()}` : ""
-      // Use history.replaceState to avoid Next.js re-render
-      window.history.replaceState(null, '', url)
+      // Only update URL if component is still mounted
+      if (!isMountedRef.current) return
+      
+      const now = Date.now()
+      
+      // Rate limiting: prevent more than 10 updates per second
+      if (now - lastUpdateRef.current < 100) {
+        updateCountRef.current++
+        if (updateCountRef.current > 10) {
+          console.warn('Too many URL updates, skipping...')
+          return
+        }
+      } else {
+        updateCountRef.current = 0
+      }
+      
+      lastUpdateRef.current = now
+      
+      try {
+        const params = new URLSearchParams()
+        if (searchTerm) params.set("search", searchTerm)
+        if (selectedCategory && selectedCategory !== "All Categories") params.set("category", selectedCategory)
+        if (selectedCard && selectedCard !== "All Cards") params.set("card", selectedCard)
+        if (selectedDateRange && selectedDateRange !== "All") params.set("dateRange", selectedDateRange)
+        if (pagination.current_page !== 1) params.set("page", String(pagination.current_page))
+        if (pagination.per_page !== 20) params.set("perPage", String(pagination.per_page))
+        const url = params.toString() ? `?${params.toString()}` : ""
+        
+        // Use history.replaceState to avoid Next.js re-render
+        window.history.replaceState(null, '', url)
+      } catch (error) {
+        console.warn('Failed to update URL:', error)
+      }
     }, 500)
+    
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
