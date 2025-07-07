@@ -437,7 +437,7 @@ export default function TransactionsPage() {
                           <div className="font-medium">{getDisplayAmount(transaction)}</div>
                           {transaction.conversion_amount && transaction.conversion_currency && (
                             <div className="text-xs text-muted-foreground">
-                              {getDisplayConversionAmount(transaction)} @ {transaction.conversion_rate}
+                              {getDisplayConversionAmount(transaction)}
                             </div>
                           )}
                           {transaction.refund_amount && (
