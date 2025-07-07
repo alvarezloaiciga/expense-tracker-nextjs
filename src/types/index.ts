@@ -58,6 +58,9 @@ export interface Transaction {
   transaction_type: "EXPENSE" | "INCOME";
   refund_amount?: string; // using string for decimal precision
   refunded_at?: string; // ISO string
+  conversion_rate?: string; // using string for decimal precision
+  conversion_currency?: string;
+  conversion_amount?: string; // using string for decimal precision
   created_at: string; // ISO string
   updated_at: string; // ISO string
   email_content?: string;

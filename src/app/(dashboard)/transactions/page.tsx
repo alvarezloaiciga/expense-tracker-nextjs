@@ -197,6 +197,12 @@ export default function TransactionsPage() {
     return formatCurrency(refundAmount, transaction.currency as CurrencyCode)
   }
 
+  const getDisplayConversionAmount = (transaction: Transaction) => {
+    if (!transaction.conversion_amount || !transaction.conversion_currency) return null
+    const conversionAmount = parseFloat(transaction.conversion_amount)
+    return formatCurrency(conversionAmount, transaction.conversion_currency as CurrencyCode)
+  }
+
   const handleCreateTransaction = async (data: any) => {
     try {
       const newTransaction = await createTransaction({
@@ -429,6 +435,11 @@ export default function TransactionsPage() {
                       <TableCell>
                         <div>
                           <div className="font-medium">{getDisplayAmount(transaction)}</div>
+                          {transaction.conversion_amount && transaction.conversion_currency && (
+                            <div className="text-xs text-muted-foreground">
+                              {getDisplayConversionAmount(transaction)} @ {transaction.conversion_rate}
+                            </div>
+                          )}
                           {transaction.refund_amount && (
                             <div className="text-sm text-green-600 font-medium">
                               Refund: {getDisplayRefundAmount(transaction)}
