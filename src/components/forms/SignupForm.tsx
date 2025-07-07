@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import api from '@/services/api';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 
 const schema = z.object({
   email: z.string().email(),
@@ -20,11 +21,14 @@ export function SignupForm() {
   });
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const onSubmit = async (data: FormData) => {
     setError(null);
     try {
       await api.signup(data.email, data.password);
+      // Invalidate and refetch user data to ensure fresh authentication state
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
       router.push('/dashboard');
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Signup failed');

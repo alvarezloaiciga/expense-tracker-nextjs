@@ -5,6 +5,7 @@ import "../globals.css"
 import { Providers } from '../lib/providers'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeInitializer } from '@/components/theme-initializer'
+import { Auth0ProviderWrapper } from '@/components/auth0-provider'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -22,18 +23,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Providers>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            storageKey="finance-ai-theme"
-          >
-            <ThemeInitializer />
-            {children}
-          </ThemeProvider>
-        </Providers>
+        <Auth0ProviderWrapper>
+          <Providers>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+              storageKey="finance-ai-theme"
+            >
+              <ThemeInitializer />
+              {children}
+            </ThemeProvider>
+          </Providers>
+        </Auth0ProviderWrapper>
       </body>
     </html>
   )

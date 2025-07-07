@@ -19,11 +19,14 @@ import { useToast } from "@/../../hooks/use-toast"
 import { format } from "date-fns"
 import { Pagination } from "@/components/ui/pagination"
 import { useSettings } from "@/hooks/useSettings"
+import { useAuth } from "@/hooks/useAuth0"
 
 export default function TransactionsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isMountedRef = useRef(false)
+  const [isOnTransactionsPage, setIsOnTransactionsPage] = useState(false)
+  const { isLoading, getAccessToken } = useAuth()
 
   // Local state for all filters/search/pagination
   const [searchTerm, setSearchTerm] = useState("")
@@ -40,7 +43,7 @@ export default function TransactionsPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [creditCards, setCreditCards] = useState<CreditCard[]>([])
   const [loading, setLoading] = useState(true)
-  const { defaultCurrency } = useSettings()
+  const { settings } = useSettings()
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const { toast } = useToast()
@@ -81,7 +84,18 @@ export default function TransactionsPage() {
 
   // On mount, initialize local state from URL
   useEffect(() => {
+    // Don't initialize if still loading
+    if (isLoading) {
+      return
+    }
+    
     isMountedRef.current = true
+    
+    // Check if we're on the transactions page
+    if (typeof window !== 'undefined') {
+      setIsOnTransactionsPage(window.location.pathname.includes('/transactions'))
+    }
+    
     const params = new URLSearchParams(window.location.search)
     setSearchTerm(params.get("search") || "")
     setSelectedCategory(params.get("category") || "All Categories")
@@ -96,11 +110,14 @@ export default function TransactionsPage() {
     return () => {
       isMountedRef.current = false
     }
-  }, [])
+  }, [isLoading])
 
   // Listen for popstate (back/forward navigation) and sync local state
   useEffect(() => {
     const onPopState = () => {
+      // Update the page check
+      setIsOnTransactionsPage(window.location.pathname.includes('/transactions'))
+      
       const params = new URLSearchParams(window.location.search)
       setSearchTerm(params.get("search") || "")
       setSelectedCategory(params.get("category") || "All Categories")
@@ -122,11 +139,21 @@ export default function TransactionsPage() {
   const updateCountRef = useRef<number>(0)
   
   useEffect(() => {
+    // Only run this effect if we're actually on the transactions page
+    if (!isOnTransactionsPage || isLoading) {
+      return
+    }
+    
     if (debounceRef.current) clearTimeout(debounceRef.current)
     
     debounceRef.current = setTimeout(() => {
       // Only update URL if component is still mounted
       if (!isMountedRef.current) return
+      
+      // Double-check we're still on the transactions page
+      if (!isOnTransactionsPage) {
+        return
+      }
       
       const now = Date.now()
       
@@ -168,6 +195,7 @@ export default function TransactionsPage() {
   const loadTransactions = useCallback(async (page = pagination.current_page) => {
     setLoading(true);
     try {
+      const accessToken = await getAccessToken();
       const categoryId = getCategoryId();
       const creditCardId = getCreditCardId();
       const dateRange = getDateRange();
@@ -182,7 +210,7 @@ export default function TransactionsPage() {
       if (dateRange.start) params.start_date = dateRange.start.toISOString().slice(0, 10);
       if (dateRange.end) params.end_date = dateRange.end.toISOString().slice(0, 10);
       // Add more filters as needed
-      const { transactions, pagination: newPagination } = await getTransactions(params);
+      const { transactions, pagination: newPagination } = await getTransactions(params, accessToken);
       setTransactions(transactions);
       // Preserve the current per_page value from our state, not from server response
       setPagination({
@@ -192,18 +220,23 @@ export default function TransactionsPage() {
     } finally {
       setLoading(false);
     }
-  }, [categories, creditCards, searchTerm, selectedCategory, selectedCard, selectedDateRange, pagination.per_page, pagination.current_page]);
+  }, [categories, creditCards, searchTerm, selectedCategory, selectedCard, selectedDateRange, pagination.per_page, pagination.current_page, getAccessToken]);
 
   // Load initial data
   useEffect(() => {
     const loadInitialData = async () => {
-      await Promise.all([
-        getCategories().then(setCategories),
-        getCreditCards().then(setCreditCards)
-      ]);
+      try {
+        const accessToken = await getAccessToken();
+        await Promise.all([
+          getCategories(accessToken).then(setCategories),
+          getCreditCards(accessToken).then(setCreditCards)
+        ]);
+      } catch (error) {
+        console.error('Failed to load initial data:', error);
+      }
     };
     loadInitialData();
-  }, []);
+  }, [getAccessToken]);
 
   // Load transactions when filters change
   useEffect(() => {
@@ -239,10 +272,11 @@ export default function TransactionsPage() {
 
   const handleCreateTransaction = async (data: any) => {
     try {
+      const accessToken = await getAccessToken();
       const newTransaction = await createTransaction({
         ...data,
         transaction_date: data.transaction_date.toISOString(),
-      })
+      }, accessToken)
       setTransactions(prev => [newTransaction, ...prev])
       toast({
         title: "Success",
@@ -263,11 +297,12 @@ export default function TransactionsPage() {
     if (!editingTransaction) return
 
     try {
+      const accessToken = await getAccessToken();
       const updatedTransaction = await updateTransaction({
         ...editingTransaction,
         ...data,
         transaction_date: data.transaction_date.toISOString(),
-      })
+      }, accessToken)
       setTransactions(prev => prev.map(t => 
         t.id === updatedTransaction.id ? updatedTransaction : t
       ))
@@ -290,7 +325,8 @@ export default function TransactionsPage() {
 
   const handleDeleteTransaction = async (transaction: Transaction) => {
     try {
-      await deleteTransaction(transaction.id)
+      const accessToken = await getAccessToken();
+      await deleteTransaction(transaction.id, accessToken)
       setTransactions(prev => prev.filter(t => t.id !== transaction.id))
       toast({
         title: "Success",
@@ -326,6 +362,15 @@ export default function TransactionsPage() {
   const getCardName = (cardId: number) => {
     const card = creditCards.find(c => c.id === cardId)
     return card?.name || "Unknown Card"
+  }
+
+  // Show loading state while fetching data
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
   }
 
   return (

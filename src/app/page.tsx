@@ -1,12 +1,43 @@
 "use client"
 
-import { useAuth } from '@/hooks/useAuth'
-import { LoginForm } from '@/components/forms/LoginForm'
-import { redirect } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuth0'
+import { useEffect } from 'react'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { 
+  BarChart3, 
+  CreditCard, 
+  TrendingUp, 
+  Shield, 
+  Zap, 
+  Globe, 
+  Users, 
+  CheckCircle,
+  ArrowRight,
+  Star,
+  DollarSign,
+  PieChart
+} from 'lucide-react'
 
 export default function HomePage() {
-  const { user, isLoading, error } = useAuth()
+  const { user, isLoading, isAuthenticated, login } = useAuth()
+
+  // Handle authenticated user redirect
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      window.location.href = '/dashboard'
+    }
+  }, [isAuthenticated, isLoading])
+
+  const handleSignIn = () => {
+    login()
+  }
+
+  const handleSignUp = () => {
+    login()
+  }
 
   // Show loading state
   if (isLoading) {
@@ -17,59 +48,313 @@ export default function HomePage() {
     )
   }
 
-  // If user is authenticated and no error, redirect to dashboard
-  if (user && !error) {
-    redirect('/dashboard')
+  // If user is authenticated, show loading while redirecting
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
   }
 
-  // Check if it's a network error (backend not running)
-  const isNetworkError = error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')
-
-  // If not authenticated or there's an error (like 401), show login form
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
-            Track your expenses with AI-powered categorization
-          </p>
-        </div>
-        <div className="bg-white dark:bg-zinc-900 dark:text-gray-100 py-8 px-6 shadow rounded-lg">
-          {isNetworkError ? (
-            <div className="text-center py-8">
-              <div className="text-red-500 mb-4">
-                <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Backend Server Not Running
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                Please start your backend server on port 3000 to use this application.
-              </p>
-              <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded text-xs text-gray-600 dark:text-gray-300">
-                <code>npm run dev</code> (in your backend directory)
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900">
+      {/* Navigation */}
+      <nav className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2">
+              <DollarSign className="h-8 w-8 text-blue-600" />
+              <span className="text-xl font-bold text-gray-900 dark:text-white">Neurospend</span>
             </div>
-          ) : (
-            <>
-              <LoginForm />
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Don't have an account?{' '}
-                  <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-                    Sign up here
-                  </Link>
-                </p>
-              </div>
-            </>
-          )}
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" onClick={handleSignIn}>
+                Sign In
+              </Button>
+              <Button onClick={handleSignUp}>
+                Get Started
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto text-center">
+          <Badge variant="secondary" className="mb-4">
+            <Star className="h-3 w-3 mr-1" />
+            Trusted by 10,000+ users
+          </Badge>
+          <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+            Master Your
+            <span className="text-blue-600"> Finances</span>
+            <br />
+            with AI-Powered Insights
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+            Track smarter. Spend better.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" onClick={handleSignUp} className="text-lg px-8 py-3">
+              Start Free Trial
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button variant="outline" size="lg" className="text-lg px-8 py-3">
+              Watch Demo
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Everything you need to manage your money
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Powerful features designed to give you complete control over your financial life
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-blue-600" />
+                </div>
+                <CardTitle>AI-Powered Categorization</CardTitle>
+                <CardDescription>
+                  Automatically categorize your transactions with machine learning
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Smart expense recognition
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Custom category creation
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Learning from your patterns
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mb-4">
+                  <BarChart3 className="h-6 w-6 text-green-600" />
+                </div>
+                <CardTitle>Advanced Analytics</CardTitle>
+                <CardDescription>
+                  Get deep insights into your spending patterns and trends
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Spending breakdowns
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Budget tracking
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Financial goal setting
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mb-4">
+                  <CreditCard className="h-6 w-6 text-purple-600" />
+                </div>
+                <CardTitle>Multi-Card Support</CardTitle>
+                <CardDescription>
+                  Manage all your credit cards and accounts in one place
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Unlimited cards
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Payment tracking
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Reward optimization
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center mb-4">
+                  <Globe className="h-6 w-6 text-orange-600" />
+                </div>
+                <CardTitle>Multi-Currency</CardTitle>
+                <CardDescription>
+                  Track expenses in multiple currencies with real-time conversion
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    150+ currencies supported
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Live exchange rates
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Automatic conversion
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center mb-4">
+                  <Shield className="h-6 w-6 text-red-600" />
+                </div>
+                <CardTitle>Bank-Level Security</CardTitle>
+                <CardDescription>
+                  Your financial data is protected with enterprise-grade security
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    End-to-end encryption
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    SOC 2 compliance
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Regular security audits
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center mb-4">
+                  <TrendingUp className="h-6 w-6 text-indigo-600" />
+                </div>
+                <CardTitle>Smart Insights</CardTitle>
+                <CardDescription>
+                  Get personalized recommendations to improve your finances
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Spending alerts
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Budget suggestions
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    Savings opportunities
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-blue-600">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            Ready to take control of your finances?
+          </h2>
+          <p className="text-xl text-blue-100 mb-8">
+            Join thousands of users who are already saving more and spending smarter
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" variant="secondary" onClick={handleSignUp} className="text-lg px-8 py-3">
+              Start Your Free Trial
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button size="lg" variant="outline" className="text-lg px-8 py-3 border-white text-white hover:bg-white hover:text-blue-600">
+              Learn More
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+                          <div className="flex items-center space-x-2 mb-4">
+              <DollarSign className="h-6 w-6 text-blue-400" />
+              <span className="text-lg font-bold">Neurospend</span>
+            </div>
+            <p className="text-gray-400">
+              Your AI-powered personal finance assistant
+            </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Product</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link href="#" className="hover:text-white">Features</Link></li>
+                <li><Link href="#" className="hover:text-white">Pricing</Link></li>
+                <li><Link href="#" className="hover:text-white">Security</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Company</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link href="#" className="hover:text-white">About</Link></li>
+                <li><Link href="#" className="hover:text-white">Blog</Link></li>
+                <li><Link href="#" className="hover:text-white">Careers</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li><Link href="#" className="hover:text-white">Help Center</Link></li>
+                <li><Link href="#" className="hover:text-white">Contact</Link></li>
+                <li><Link href="#" className="hover:text-white">Privacy</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; {new Date().getFullYear()} Neurospend. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 } 

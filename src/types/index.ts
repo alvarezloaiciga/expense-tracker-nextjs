@@ -13,11 +13,6 @@ export interface UserSettings {
   enabled_currencies: string[];
 }
 
-export interface AuthResponse {
-  token: string;
-  user: User;
-}
-
 export interface APIError {
   message: string;
   status?: number;

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { BarChart3, CreditCard, FileText, Home, Settings, Tag, Menu, X, LogOut, User } from "lucide-react"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/hooks/useAuth0"
 
 const navItems = [
   {
@@ -45,7 +45,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  const { user, logout, isLoading, error } = useAuth()
+  const { user, logout, isLoading, isAuthenticated } = useAuth()
 
   return (
     <>
@@ -101,17 +101,25 @@ export default function Sidebar() {
               <ModeToggle />
             </div>
             
-            {!isLoading && user && !error && (
+            {!isLoading && isAuthenticated && user && (
               <div className="space-y-3">
                 <div className="flex items-center space-x-3 px-2">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-primary" />
-                    </div>
+                    {user.picture ? (
+                      <img
+                        src={user.picture}
+                        alt={user.name || 'User'}
+                        className="w-8 h-8 rounded-full"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
-                      {user.name || 'User'}
+                      {user.name || user.email || 'User'}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {user.email}
@@ -131,7 +139,7 @@ export default function Sidebar() {
               </div>
             )}
 
-            {!isLoading && !user && (
+            {!isLoading && !isAuthenticated && (
               <div className="space-y-3">
                 <div className="flex items-center space-x-3 px-2">
                   <div className="flex-shrink-0">
@@ -149,7 +157,7 @@ export default function Sidebar() {
                   </div>
                 </div>
                 
-                <Link href="/login">
+                <Link href="/">
                   <Button
                     variant="ghost"
                     size="sm"
