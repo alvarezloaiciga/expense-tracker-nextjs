@@ -35,7 +35,11 @@ export function CardUsageComparison({ currency = "USD" }: CardUsageComparisonPro
   }
 
   // Filter out cards with no expenses in the selected currency
-  const cardsWithExpenses = cards.filter(card => card.expenses[currency] && card.expenses[currency] > 0)
+  const cardsWithExpenses = cards.filter(card => 
+    card.expenses_by_currency && 
+    card.expenses_by_currency[currency] && 
+    card.expenses_by_currency[currency] > 0
+  )
   
   if (cardsWithExpenses.length === 0) {
     return (
@@ -47,7 +51,7 @@ export function CardUsageComparison({ currency = "USD" }: CardUsageComparisonPro
 
   const chartData = cardsWithExpenses.map((card) => ({
     name: card.name,
-    value: card.expenses[currency] || 0
+    value: (card.expenses_by_currency && card.expenses_by_currency[currency]) || 0
   }))
 
   return (

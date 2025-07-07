@@ -28,6 +28,8 @@ export interface CreditCard {
   name: string;
   last_four_digits: string;
   brand: string;
+  primary_currency: string;
+  secondary_currency?: string | null;
   expenses_by_currency: Record<string, number>;
 }
 

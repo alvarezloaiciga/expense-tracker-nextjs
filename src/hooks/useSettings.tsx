@@ -34,7 +34,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         name: '',
         default_currency: 'USD',
         preferred_theme: 'light',
-        enabled_currencies: ['USD']
+        enabled_currencies: ['USD', 'CRC', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD']
       })
       setLoading(false)
     }
@@ -52,7 +52,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         name: '',
         default_currency: 'USD',
         preferred_theme: 'light',
-        enabled_currencies: ['USD']
+        enabled_currencies: ['USD', 'CRC', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD']
       })
     } finally {
       setLoading(false)
@@ -92,7 +92,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setDefaultCurrency,
     preferredTheme: settings?.preferred_theme || 'light',
     setPreferredTheme,
-    enabledCurrencies: (settings?.enabled_currencies as CurrencyCode[]) || ['USD'],
+    enabledCurrencies: (settings?.enabled_currencies as CurrencyCode[]) || ['USD', 'CRC', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'],
   }
 
   return (

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Pencil, Trash2, CreditCard as CreditCardIcon } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { formatCurrency } from "@/lib/currency"
+import { formatCurrency, CURRENCIES, type CurrencyCode } from "@/lib/currency"
 import { useSettings } from "@/hooks/useSettings"
 import api from '@/services/api'
 
@@ -42,7 +42,9 @@ export default function CreditCardsPage() {
   const [deleteCard, setDeleteCard] = useState<CreditCard | null>(null)
 
   // Form state
-  const [form, setForm] = useState<Partial<CreditCard>>({})
+  const [form, setForm] = useState<Partial<CreditCard>>({
+    primary_currency: "USD"
+  })
 
   // Mutations
   const addOrEditMutation = useMutation({
@@ -54,6 +56,8 @@ export default function CreditCardsPage() {
           name: card.name!,
           last_four_digits: card.last_four_digits!,
           brand: card.brand!,
+          primary_currency: card.primary_currency!,
+          secondary_currency: card.secondary_currency,
         })
       }
     },
@@ -138,6 +142,17 @@ export default function CreditCardsPage() {
                   <span className="font-mono">{card.last_four_digits}</span>
                 </div>
                 <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Currencies</span>
+                  <span className="text-sm font-medium">
+                    {CURRENCIES[card.primary_currency as CurrencyCode]?.symbol} {card.primary_currency}
+                    {card.secondary_currency && (
+                      <span className="text-muted-foreground ml-1">
+                        / {CURRENCIES[card.secondary_currency as CurrencyCode]?.symbol} {card.secondary_currency}
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Total Expenses</span>
                   <span className="font-semibold flex flex-col items-end gap-0">
                     {Object.entries(card.expenses_by_currency).length > 0 ? (
@@ -184,6 +199,37 @@ export default function CreditCardsPage() {
             <div>
               <Label htmlFor="last_four_digits">Last 4 Digits</Label>
               <Input name="last_four_digits" id="last_four_digits" value={form.last_four_digits || ""} maxLength={4} onChange={handleFormChange} required />
+            </div>
+            <div>
+              <Label htmlFor="primary_currency">Primary Currency</Label>
+              <Select value={form.primary_currency || ""} onValueChange={(value) => setForm((f) => ({ ...f, primary_currency: value }))} required>
+                <SelectTrigger id="primary_currency">
+                  <SelectValue placeholder="Select primary currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(CURRENCIES).map(([code, info]) => (
+                    <SelectItem key={code} value={code}>
+                      {info.symbol} {info.name} ({info.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="secondary_currency">Secondary Currency (Optional)</Label>
+              <Select value={form.secondary_currency || "none"} onValueChange={(value) => setForm((f) => ({ ...f, secondary_currency: value === "none" ? null : value }))}>
+                <SelectTrigger id="secondary_currency">
+                  <SelectValue placeholder="Select secondary currency (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {Object.entries(CURRENCIES).map(([code, info]) => (
+                    <SelectItem key={code} value={code}>
+                      {info.symbol} {info.name} ({info.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

@@ -12,8 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { ChevronDown, Filter, Search, Edit, Trash2, Eye } from "lucide-react"
 import { TransactionDialog } from "@/components/transaction-dialog"
-import { CurrencyToggle } from "@/components/currency-toggle"
-import { formatCurrency, convertCurrency, type CurrencyCode } from "@/lib/currency"
+import { formatCurrency, type CurrencyCode } from "@/lib/currency"
 import { getTransactions, createTransaction, updateTransaction, deleteTransaction, getCategories, getCreditCards } from "@/services/api"
 import type { Transaction, Category, CreditCard } from "@/types"
 import { useToast } from "@/../../hooks/use-toast"
@@ -40,19 +39,12 @@ export default function TransactionsPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [creditCards, setCreditCards] = useState<CreditCard[]>([])
   const [loading, setLoading] = useState(true)
-  const { defaultCurrency, enabledCurrencies } = useSettings()
-  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>(defaultCurrency)
+  const { defaultCurrency } = useSettings()
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const { toast } = useToast()
 
-  // Update display currency when default currency changes
-  useEffect(() => {
-    setDisplayCurrency(defaultCurrency)
-  }, [defaultCurrency])
 
-  // If no enabled currencies, don't render currency toggle
-  const showCurrencyToggle = enabledCurrencies && enabledCurrencies.length > 1
   
   const getCategoryId = () => {
     if (selectedCategory === "All Categories" || selectedCategory === "Uncategorized") return undefined;
@@ -196,39 +188,12 @@ export default function TransactionsPage() {
 
   const getDisplayAmount = (transaction: Transaction) => {
     const amount = parseFloat(transaction.amount)
-    if (transaction.currency === displayCurrency) {
-      return formatCurrency(amount, transaction.currency as CurrencyCode)
-    }
-
-    const convertedAmount = convertCurrency(amount, transaction.currency as CurrencyCode, displayCurrency)
-    return formatCurrency(convertedAmount, displayCurrency)
-  }
-
-  const getOriginalAmount = (transaction: Transaction) => {
-    const amount = parseFloat(transaction.amount)
-    if (transaction.currency === displayCurrency) {
-      return null
-    }
     return formatCurrency(amount, transaction.currency as CurrencyCode)
   }
 
   const getDisplayRefundAmount = (transaction: Transaction) => {
     if (!transaction.refund_amount) return null
     const refundAmount = parseFloat(transaction.refund_amount)
-    if (transaction.currency === displayCurrency) {
-      return formatCurrency(refundAmount, transaction.currency as CurrencyCode)
-    }
-
-    const convertedRefundAmount = convertCurrency(refundAmount, transaction.currency as CurrencyCode, displayCurrency)
-    return formatCurrency(convertedRefundAmount, displayCurrency)
-  }
-
-  const getOriginalRefundAmount = (transaction: Transaction) => {
-    if (!transaction.refund_amount) return null
-    const refundAmount = parseFloat(transaction.refund_amount)
-    if (transaction.currency === displayCurrency) {
-      return null
-    }
     return formatCurrency(refundAmount, transaction.currency as CurrencyCode)
   }
 
@@ -331,9 +296,6 @@ export default function TransactionsPage() {
           <p className="text-muted-foreground">View and manage your transaction history</p>
         </div>
         <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-2">
-          {showCurrencyToggle && (
-            <CurrencyToggle currentCurrency={displayCurrency} onCurrencyChange={setDisplayCurrency} />
-          )}
           <Button variant="outline" size="sm">
             Export CSV
           </Button>
@@ -467,19 +429,9 @@ export default function TransactionsPage() {
                       <TableCell>
                         <div>
                           <div className="font-medium">{getDisplayAmount(transaction)}</div>
-                          {getOriginalAmount(transaction) && (
-                            <div className="text-sm text-muted-foreground">
-                              {getOriginalAmount(transaction)}
-                            </div>
-                          )}
                           {transaction.refund_amount && (
                             <div className="text-sm text-green-600 font-medium">
                               Refund: {getDisplayRefundAmount(transaction)}
-                            </div>
-                          )}
-                          {transaction.refund_amount && getOriginalRefundAmount(transaction) && (
-                            <div className="text-xs text-muted-foreground">
-                              {getOriginalRefundAmount(transaction)}
                             </div>
                           )}
                           {transaction.refunded_at && (

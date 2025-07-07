@@ -94,7 +94,7 @@ export async function getCreditCards(): Promise<CreditCard[]> {
   return data;
 }
 
-export async function createCreditCard(card: Omit<CreditCard, 'id' | 'expenses'>): Promise<CreditCard> {
+export async function createCreditCard(card: Omit<CreditCard, 'id' | 'expenses_by_currency'>): Promise<CreditCard> {
   const { data } = await api.post<CreditCard>('/api/credit_cards', card);
   return data;
 }
