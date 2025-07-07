@@ -14,16 +14,16 @@ import { useSettings } from "@/hooks/useSettings"
 import { type CurrencyCode } from "@/lib/currency"
 
 export default function AnalyticsPage() {
-  const { defaultCurrency, enabledCurrencies } = useSettings()
-  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>(defaultCurrency)
+  const { settings } = useSettings()
+  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>(settings.default_currency as CurrencyCode)
 
   // Update display currency when default currency changes
   useEffect(() => {
-    setDisplayCurrency(defaultCurrency)
-  }, [defaultCurrency])
+    setDisplayCurrency(settings.default_currency as CurrencyCode)
+  }, [settings.default_currency])
 
   // If no enabled currencies, don't render currency toggle
-  const showCurrencyToggle = enabledCurrencies && enabledCurrencies.length > 1
+  const showCurrencyToggle = settings.enabled_currencies && settings.enabled_currencies.length > 1
 
   return (
     <div className="space-y-6">

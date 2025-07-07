@@ -12,7 +12,7 @@ import { useTheme } from "next-themes"
 import { useToast } from "@/../../hooks/use-toast"
 
 export default function SettingsPage() {
-  const { settings, loading, updateSettings, enabledCurrencies } = useSettings()
+  const { settings, isLoading, updateSettings } = useSettings()
   const { setTheme } = useTheme()
   const { toast } = useToast()
   const [isUpdating, setIsUpdating] = useState(false)
@@ -36,7 +36,10 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsUpdating(true)
     try {
-      await updateSettings(formData)
+      await updateSettings({
+        ...settings,
+        ...formData
+      })
       setTheme(formData.preferred_theme)
       toast({
         title: "Success",
@@ -54,7 +57,7 @@ export default function SettingsPage() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div>
@@ -102,8 +105,8 @@ export default function SettingsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {enabledCurrencies?.map((code: CurrencyCode) => {
-                  const info = CURRENCIES[code]
+                {settings.enabled_currencies?.map((code: string) => {
+                  const info = CURRENCIES[code as CurrencyCode]
                   return (
                     <SelectItem key={code} value={code}>
                       {info.symbol} {info.name} ({info.code})

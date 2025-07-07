@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowDownIcon, ArrowUpIcon, CreditCard, DollarSign, ShoppingBag, TrendingDown } from "lucide-react"
@@ -12,6 +12,7 @@ import { CurrencyToggle } from "@/components/currency-toggle"
 import { formatCurrency, type CurrencyCode } from "@/lib/currency"
 import { getDashboardStats } from "@/services/api"
 import { useSettings } from "@/hooks/useSettings"
+import { useAuth } from "@/hooks/useAuth0"
 import type { DashboardStats } from "@/types"
 
 function getDateRangeForTab(tab: string): { from: string; to: string } {
@@ -35,31 +36,42 @@ function getDateRangeForTab(tab: string): { from: string; to: string } {
 }
 
 export default function Dashboard() {
-  const { defaultCurrency, enabledCurrencies } = useSettings()
-  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>(defaultCurrency)
+  const { settings } = useSettings()
+  const { getAccessToken } = useAuth()
+  const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>(settings.default_currency as CurrencyCode)
   const [tab, setTab] = useState("30days")
   const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
 
   // Update display currency when default currency changes
   useEffect(() => {
-    setDisplayCurrency(defaultCurrency)
-  }, [defaultCurrency])
+    setDisplayCurrency(settings.default_currency as CurrencyCode)
+  }, [settings.default_currency])
 
   // If no enabled currencies, don't render currency toggle
-  const showCurrencyToggle = enabledCurrencies && enabledCurrencies.length > 1
+  const showCurrencyToggle = settings.enabled_currencies && settings.enabled_currencies.length > 1
 
+  // Load dashboard stats when tab or currency changes
   useEffect(() => {
-    const { from, to } = getDateRangeForTab(tab)
-    setLoading(true)
-    getDashboardStats({ from, to, currency: displayCurrency })
-      .then(setStats)
-      .catch(error => {
+    const loadStats = async () => {
+      setLoading(true)
+      try {
+        const { from, to } = getDateRangeForTab(tab)
+        const accessToken = await getAccessToken()
+        const dashboardStats = await getDashboardStats({ from, to, currency: displayCurrency }, accessToken)
+        setStats(dashboardStats)
+      } catch (error) {
         console.error('Failed to fetch dashboard stats:', error)
         setStats(null)
-      })
-      .finally(() => setLoading(false))
-  }, [tab, displayCurrency])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadStats()
+  }, [tab, displayCurrency, getAccessToken])
+
+
 
   return (
     <div className="space-y-6">
@@ -200,7 +212,7 @@ export default function Dashboard() {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     <span className="text-green-500 inline-flex items-center">
-                      <ArrowDownIcon className="mr-1 h-3 w-3" />
+                      <ArrowUpIcon className="mr-1 h-3 w-3" />
                       {stats.summary.trend.average_transaction_pct_change > 0 ? '+' : ''}
                       {stats.summary.trend.average_transaction_pct_change}%
                     </span>{' '}

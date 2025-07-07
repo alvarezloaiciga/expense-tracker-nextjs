@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 
 export function ModeToggle() {
   const { theme, setTheme } = useTheme()
-  const { setPreferredTheme } = useSettings()
+  const { settings, updateSettings } = useSettings()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -31,7 +31,10 @@ export function ModeToggle() {
   const handleThemeChange = async () => {
     setTheme(nextTheme)
     try {
-      await setPreferredTheme(nextTheme)
+      await updateSettings({
+        ...settings,
+        preferred_theme: nextTheme
+      })
     } catch (error) {
       console.error("Failed to save theme preference:", error)
     }

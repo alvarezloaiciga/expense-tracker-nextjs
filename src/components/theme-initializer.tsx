@@ -6,13 +6,13 @@ import { useSettings } from '@/hooks/useSettings'
 
 export function ThemeInitializer() {
   const { setTheme } = useTheme()
-  const { preferredTheme, loading } = useSettings()
+  const { settings, isLoading } = useSettings()
 
   useEffect(() => {
-    if (!loading && preferredTheme) {
-      setTheme(preferredTheme)
+    if (!isLoading && settings.preferred_theme) {
+      setTheme(settings.preferred_theme)
     }
-  }, [preferredTheme, loading, setTheme])
+  }, [settings.preferred_theme, isLoading, setTheme])
 
   return null
 } 

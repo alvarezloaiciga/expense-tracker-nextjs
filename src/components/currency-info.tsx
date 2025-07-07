@@ -10,7 +10,7 @@ interface CurrencyInfoProps {
 }
 
 export function CurrencyInfo({ displayCurrency }: CurrencyInfoProps) {
-  const { defaultCurrency, enabledCurrencies } = useSettings()
+  const { settings } = useSettings()
 
   return (
     <Card className="w-full">
@@ -27,20 +27,20 @@ export function CurrencyInfo({ displayCurrency }: CurrencyInfoProps) {
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Default Currency:</span>
           <Badge variant="outline">
-            {CURRENCIES[defaultCurrency].symbol} {CURRENCIES[defaultCurrency].code}
+            {CURRENCIES[settings.default_currency as CurrencyCode].symbol} {CURRENCIES[settings.default_currency as CurrencyCode].code}
           </Badge>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Enabled Currencies:</span>
           <div className="flex gap-1">
-            {enabledCurrencies?.map((code) => (
+            {settings.enabled_currencies?.map((code: string) => (
               <Badge key={code} variant="outline" className="text-xs">
-                {CURRENCIES[code].symbol}
+                {CURRENCIES[code as CurrencyCode].symbol}
               </Badge>
             ))}
           </div>
         </div>
-        {displayCurrency !== defaultCurrency && (
+        {displayCurrency !== settings.default_currency && (
           <div className="text-xs text-muted-foreground mt-2">
             💡 Display currency changes are temporary. Update your default currency in Settings to make it permanent.
           </div>

@@ -11,10 +11,10 @@ interface CurrencyToggleProps {
 }
 
 export function CurrencyToggle({ currentCurrency, onCurrencyChange }: CurrencyToggleProps) {
-  const { enabledCurrencies } = useSettings()
+  const { settings } = useSettings()
 
   // Don't render if there are no enabled currencies or only one
-  if (!enabledCurrencies || enabledCurrencies.length <= 1) {
+  if (!settings.enabled_currencies || settings.enabled_currencies.length <= 1) {
     return null
   }
 
@@ -27,12 +27,12 @@ export function CurrencyToggle({ currentCurrency, onCurrencyChange }: CurrencyTo
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {enabledCurrencies.map((code) => {
-          const info = CURRENCIES[code]
+        {settings.enabled_currencies.map((code: string) => {
+          const info = CURRENCIES[code as CurrencyCode]
           return (
             <DropdownMenuItem
               key={code}
-              onClick={() => onCurrencyChange(code)}
+              onClick={() => onCurrencyChange(code as CurrencyCode)}
               className={currentCurrency === code ? "bg-accent" : ""}
             >
               {info.symbol} {info.name} ({info.code})

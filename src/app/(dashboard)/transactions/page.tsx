@@ -248,7 +248,6 @@ export default function TransactionsPage() {
   // Load transactions when per_page changes
   useEffect(() => {
     if (categories.length > 0 && creditCards.length > 0) {
-      console.log("Loading transactions", loading)
       loadTransactions(1); // Always go to page 1 when per_page changes
     }
   }, [pagination.per_page, categories.length, creditCards.length]);

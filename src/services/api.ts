@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { User, UserSettings, CreditCard, Category, Transaction, DashboardStats } from '@/types';
+import type { UserSettings, CreditCard, Category, Transaction, DashboardStats } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -9,18 +9,6 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
-// Helper function to get Auth0 access token
-const getAuth0Token = async (): Promise<string | null> => {
-  try {
-    // This will be called from components that have access to Auth0 context
-    // We'll need to pass the token from the component level
-    return null;
-  } catch (error) {
-    console.error('Failed to get Auth0 token:', error);
-    return null;
-  }
-};
 
 // Attach token to requests
 api.interceptors.request.use(async (config) => {

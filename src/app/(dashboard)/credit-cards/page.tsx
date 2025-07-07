@@ -12,6 +12,7 @@ import { Plus, Pencil, Trash2, CreditCard as CreditCardIcon } from "lucide-react
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { formatCurrency, CURRENCIES, type CurrencyCode } from "@/lib/currency"
 import { useSettings } from "@/hooks/useSettings"
+import { useAuth } from "@/hooks/useAuth0"
 import api from '@/services/api'
 
 const BRANDS = [
@@ -30,10 +31,14 @@ function getBrandLogo(brand: string) {
 
 export default function CreditCardsPage() {
   const queryClient = useQueryClient()
-  const { defaultCurrency } = useSettings()
+  const { settings } = useSettings()
+  const { getAccessToken } = useAuth()
   const { data: cards = [], isLoading } = useQuery({
     queryKey: ["credit-cards"],
-    queryFn: api.getCreditCards,
+    queryFn: async () => {
+      const accessToken = await getAccessToken()
+      return api.getCreditCards(accessToken)
+    },
   })
 
   // Dialog state
@@ -49,8 +54,9 @@ export default function CreditCardsPage() {
   // Mutations
   const addOrEditMutation = useMutation({
     mutationFn: async (card: Partial<CreditCard>) => {
+      const accessToken = await getAccessToken()
       if (editCard) {
-        return api.updateCreditCard({ ...editCard, ...card } as CreditCard)
+        return api.updateCreditCard({ ...editCard, ...card } as CreditCard, accessToken)
       } else {
         return api.createCreditCard({
           name: card.name!,
@@ -58,7 +64,7 @@ export default function CreditCardsPage() {
           brand: card.brand!,
           primary_currency: card.primary_currency!,
           secondary_currency: card.secondary_currency,
-        })
+        }, accessToken)
       }
     },
     onSuccess: () => {
@@ -71,7 +77,8 @@ export default function CreditCardsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (card: CreditCard) => {
-      return api.deleteCreditCard(card.id)
+      const accessToken = await getAccessToken()
+      return api.deleteCreditCard(card.id, accessToken)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["credit-cards"] })
