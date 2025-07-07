@@ -97,11 +97,8 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" onClick={handleSignUp} className="text-lg px-8 py-3">
-              Start Free Trial
+              Start Free Trial for 2 weeks, $20/month after
               <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-              Watch Demo
             </Button>
           </div>
         </div>
