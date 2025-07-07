@@ -13,6 +13,7 @@ import { CategoryDialog } from "@/components/category-dialog"
 import { getCategories, createCategory, updateCategory, deleteCategory } from "@/services/api"
 import type { Category } from "@/types"
 import { useToast } from "@/../../hooks/use-toast"
+import { useAuth } from "@/hooks/useAuth0"
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -21,6 +22,7 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | undefined>()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const { toast } = useToast()
+  const { getAccessToken } = useAuth()
 
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -29,7 +31,8 @@ export default function CategoriesPage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
-      const categoriesData = await getCategories()
+      const accessToken = await getAccessToken()
+      const categoriesData = await getCategories(accessToken)
       setCategories(categoriesData)
     } catch (error) {
       console.error("Error loading data:", error)
@@ -41,7 +44,7 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [toast, getAccessToken])
 
   useEffect(() => {
     loadData()
@@ -49,7 +52,8 @@ export default function CategoriesPage() {
 
   const handleCreateCategory = async (data: { name: string; color: string; budget: number }) => {
     try {
-      const newCategory = await createCategory(data)
+      const accessToken = await getAccessToken()
+      const newCategory = await createCategory(data, accessToken)
       setCategories(prev => [...prev, newCategory])
       toast({
         title: "Success",
@@ -70,10 +74,11 @@ export default function CategoriesPage() {
     if (!editingCategory) return
 
     try {
+      const accessToken = await getAccessToken()
       const updatedCategory = await updateCategory({
         ...editingCategory,
         ...data,
-      })
+      }, accessToken)
       setCategories(prev => prev.map(cat => 
         cat.id === updatedCategory.id ? updatedCategory : cat
       ))
@@ -96,7 +101,8 @@ export default function CategoriesPage() {
 
   const handleDeleteCategory = async (category: Category) => {
     try {
-      await deleteCategory(category.id)
+      const accessToken = await getAccessToken()
+      await deleteCategory(category.id, accessToken)
       setCategories(prev => prev.filter(cat => cat.id !== category.id))
       toast({
         title: "Success",
