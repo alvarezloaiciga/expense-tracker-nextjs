@@ -20,6 +20,8 @@ import { format } from "date-fns"
 import { Pagination } from "@/components/ui/pagination"
 import { useSettings } from "@/hooks/useSettings"
 import { useAuth } from "@/hooks/useAuth0"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 export default function TransactionsPage() {
   const router = useRouter()
@@ -363,6 +365,40 @@ export default function TransactionsPage() {
     return card?.name || "Unknown Card"
   }
 
+  const gmailInstructions = (
+    <div className="text-sm">
+      <a
+        href="/gmail-filters.xml"
+        download
+        className="inline-block mb-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+      >
+        Download Filters
+      </a>
+      <ol className="list-decimal list-inside space-y-1">
+        <li>
+          <b>Download</b> the mail filters file from this page.
+        </li>
+        <li>
+          Go to your {" "}
+          <a
+            href="https://mail.google.com/mail/u/0/#settings/filters"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-blue-700"
+          >
+            Gmail Filters Settings
+          </a>.
+        </li>
+        <li>
+          Click <b>Import Filters</b> and select the file you downloaded.
+        </li>
+        <li>
+          Click <b>Import</b> to finish adding the filters to your Gmail account.
+        </li>
+      </ol>
+    </div>
+  );
+
   // Show loading state while fetching data
   if (isLoading) {
     return (
@@ -391,6 +427,30 @@ export default function TransactionsPage() {
           />
         </div>
       </div>
+
+      {transactions.length === 0 ? (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">
+          <h2 className="font-semibold mb-2">How to Import Mail Filters into Gmail</h2>
+          {gmailInstructions}
+        </div>
+      ) : (
+        <div className="flex items-center mb-4">
+          <span className="mr-2 font-medium">Need help importing mail filters?</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="p-1 rounded-full bg-blue-100 hover:bg-blue-200">
+                  <Info className="h-5 w-5 text-blue-700" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <h2 className="font-semibold mb-2">How to Import Mail Filters into Gmail</h2>
+                {gmailInstructions}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
