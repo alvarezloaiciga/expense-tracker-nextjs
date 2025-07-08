@@ -112,6 +112,7 @@ export async function deleteCategory(id: number, accessToken: string): Promise<v
 // --- Transactions API ---
 export async function getTransactions(params: {
   page?: number;
+  per_page?: number;
   category_id?: number;
   credit_card_id?: number;
   transaction_type?: string;
@@ -122,6 +123,7 @@ export async function getTransactions(params: {
   const api = createAuthenticatedApi(accessToken);
   const query = new URLSearchParams();
   if (params.page) query.append('page', params.page.toString());
+  if (params.per_page) query.append('per_page', params.per_page.toString());
   if (params.category_id) query.append('category_id', params.category_id.toString());
   if (params.credit_card_id) query.append('credit_card_id', params.credit_card_id.toString());
   if (params.transaction_type) query.append('transaction_type', params.transaction_type);

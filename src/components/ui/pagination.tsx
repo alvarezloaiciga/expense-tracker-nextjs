@@ -21,7 +21,7 @@ export function Pagination({
   onPageChange,
   onPageSizeChange,
 }: PaginationProps) {
-  const startItem = (currentPage - 1) * pageSize + 1
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
   const endItem = Math.min(currentPage * pageSize, totalItems)
 
   const getVisiblePages = () => {
@@ -54,7 +54,10 @@ export function Pagination({
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
       <div className="flex items-center space-x-2">
         <p className="text-sm text-muted-foreground">
-          Showing {startItem} to {endItem} of {totalItems} transactions
+          {totalItems === 0 
+            ? "No transactions found" 
+            : `Showing ${startItem} to ${endItem} of ${totalItems} transactions`
+          }
         </p>
       </div>
 
