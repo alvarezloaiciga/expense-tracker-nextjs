@@ -99,7 +99,7 @@ export default function HomePage() {
             <Button
               size="lg"
               onClick={handleSignUp}
-              className="w-full whitespace-normal break-words flex items-center justify-center text-white bg-primary"
+              className="w-full whitespace-normal break-words flex items-center justify-center text-white bg-primary dark:bg-blue-500 dark:text-white"
             >
               <span className="block text-base font-normal">
                 Start Free Trial for 2 weeks
@@ -311,7 +311,11 @@ export default function HomePage() {
               Start Your Free Trial
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-3 border-white text-white hover:bg-white hover:text-blue-600">
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 py-3 border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-800 dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-blue-600 transition"
+            >
               Learn More
             </Button>
           </div>
