@@ -428,28 +428,30 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {transactions.length === 0 ? (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">
-          <h2 className="font-semibold mb-2">How to Import Mail Filters into Gmail</h2>
-          {gmailInstructions}
-        </div>
-      ) : (
-        <div className="flex items-center mb-4">
-          <span className="mr-2 font-medium">Need help importing mail filters?</span>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button type="button" className="p-1 rounded-full bg-blue-100 hover:bg-blue-200">
-                  <Info className="h-5 w-5 text-blue-700" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-xs">
-                <h2 className="font-semibold mb-2">How to Import Mail Filters into Gmail</h2>
-                {gmailInstructions}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+      {!loading && (
+        transactions.length === 0 ? (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">
+            <h2 className="font-semibold mb-2">How to Import Mail Filters into Gmail</h2>
+            {gmailInstructions}
+          </div>
+        ) : (
+          <div className="flex items-center mb-4">
+            <span className="mr-2 font-medium">Need help importing mail filters?</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" className="p-1 rounded-full bg-blue-100 hover:bg-blue-200">
+                    <Info className="h-5 w-5 text-blue-700" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <h2 className="font-semibold mb-2">How to Import Mail Filters into Gmail</h2>
+                  {gmailInstructions}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        )
       )}
 
       <Card>
