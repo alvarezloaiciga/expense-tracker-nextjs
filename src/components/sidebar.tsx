@@ -49,11 +49,19 @@ export default function Sidebar() {
 
   return (
     <>
+      {/* Mobile backdrop overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 z-40 md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Mobile menu button */}
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden"
+        className="fixed top-4 left-4 z-[60] md:hidden bg-background/80 backdrop-blur-sm border shadow-sm"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -62,7 +70,7 @@ export default function Sidebar() {
       {/* Sidebar for both mobile and desktop */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 transform bg-background border-r border-border transition-transform duration-200 ease-in-out md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 transform bg-background border-r border-border transition-transform duration-200 ease-in-out md:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -70,7 +78,7 @@ export default function Sidebar() {
           <div className="flex items-center justify-between px-4 py-4 border-b">
             <Link href="/dashboard" className="flex items-center space-x-2">
               <FileText className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">FinanceAI</span>
+              <span className="text-xl font-bold">NeuroSpend</span>
             </Link>
             <div className="md:hidden">
               <ModeToggle />

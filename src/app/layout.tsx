@@ -10,9 +10,9 @@ import { Auth0ProviderWrapper } from '@/components/auth0-provider'
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FinanceAI - Smart Expense Tracker",
-  description: "AI-powered personal expense tracker",
-  generator: 'v0.dev'
+  title: "NeuroSpend - Smart Expense Tracker",
+  description: "Track smarter. Spend better.",
+  generator: 'Neurovia Labs'
 }
 
 export default function RootLayout({

@@ -65,7 +65,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <DollarSign className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900 dark:text-white">Neurospend</span>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">NeuroSpend</span>
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="ghost" onClick={handleSignIn}>
@@ -95,11 +95,20 @@ export default function HomePage() {
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
             Track smarter. Spend better.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={handleSignUp} className="text-lg px-8 py-3">
-              Start Free Trial for 2 weeks, $20/month after
-              <ArrowRight className="ml-2 h-5 w-5" />
+          <div className="flex flex-col items-center w-full max-w-xs sm:max-w-md mx-auto">
+            <Button
+              size="lg"
+              onClick={handleSignUp}
+              className="w-full whitespace-normal break-words flex items-center justify-center text-white bg-primary"
+            >
+              <span className="block text-base font-normal">
+                Start Free Trial for 2 weeks
+              </span>
+              <ArrowRight className="ml-2 h-5 w-5 flex-shrink-0" />
             </Button>
+            <span className="mt-2 text-sm text-muted-foreground text-center w-full">
+              $20/month after
+            </span>
           </div>
         </div>
       </section>
@@ -316,7 +325,7 @@ export default function HomePage() {
             <div>
                           <div className="flex items-center space-x-2 mb-4">
               <DollarSign className="h-6 w-6 text-blue-400" />
-              <span className="text-lg font-bold">Neurospend</span>
+              <span className="text-lg font-bold">NeuroSpend</span>
             </div>
             <p className="text-gray-400">
               Your AI-powered personal finance assistant
@@ -348,7 +357,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Neurospend. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} NeuroSpend. All rights reserved.</p>
           </div>
         </div>
       </footer>
