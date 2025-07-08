@@ -13,7 +13,7 @@
 		<id>tag:mail.google.com,2008:filter:z0000001751565654636*8706302933536461428</id>
 		<updated>2025-07-08T02:50:25Z</updated>
 		<content></content>
-		<apps:property name='hasTheWord' value='{from: notificacion@notificacionesbaccr.com from: bcrtarjestcta@bancobcr.com}'/>
+		<apps:property name='hasTheWord' value='{from: notificacion@notificacionesbaccr.com from: bcrtarjestcta@bancobcr.com from: bncontacto@bncr.fi.cr}'/>
 		<apps:property name='forwardTo' value='neurospend@neurovialabs.com'/>
 		<apps:property name='sizeOperator' value='s_sl'/>
 		<apps:property name='sizeUnit' value='s_smb'/>
