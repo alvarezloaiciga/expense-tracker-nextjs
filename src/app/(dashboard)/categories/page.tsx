@@ -14,6 +14,7 @@ import { getCategories, createCategory, updateCategory, deleteCategory } from "@
 import type { Category } from "@/types"
 import { useToast } from "@/../../hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth0"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -23,6 +24,7 @@ export default function CategoriesPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const { toast } = useToast()
   const { getAccessToken } = useAuth()
+  const { t } = useTranslation()
 
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -37,8 +39,8 @@ export default function CategoriesPage() {
     } catch (error) {
       console.error("Error loading data:", error)
       toast({
-        title: "Error",
-        description: "Failed to load data",
+        title: t("common.error"),
+        description: t("categories.failedToLoad"),
         variant: "destructive",
       })
     } finally {
@@ -56,14 +58,14 @@ export default function CategoriesPage() {
       const newCategory = await createCategory(data, accessToken)
       setCategories(prev => [...prev, newCategory])
       toast({
-        title: "Success",
-        description: "Category created successfully",
+        title: t("common.success"),
+        description: t("categories.categoryCreated"),
       })
     } catch (error) {
       console.error("Error creating category:", error)
       toast({
-        title: "Error",
-        description: "Failed to create category",
+        title: t("common.error"),
+        description: t("categories.failedToCreate"),
         variant: "destructive",
       })
       throw error
@@ -85,14 +87,14 @@ export default function CategoriesPage() {
       setEditingCategory(undefined)
       setEditDialogOpen(false)
       toast({
-        title: "Success",
-        description: "Category updated successfully",
+        title: t("common.success"),
+        description: t("categories.categoryUpdated"),
       })
     } catch (error) {
       console.error("Error updating category:", error)
       toast({
-        title: "Error",
-        description: "Failed to update category",
+        title: t("common.error"),
+        description: t("categories.failedToUpdate"),
         variant: "destructive",
       })
       throw error
@@ -105,14 +107,14 @@ export default function CategoriesPage() {
       await deleteCategory(category.id, accessToken)
       setCategories(prev => prev.filter(cat => cat.id !== category.id))
       toast({
-        title: "Success",
-        description: "Category deleted successfully",
+        title: t("common.success"),
+        description: t("categories.categoryDeleted"),
       })
     } catch (error) {
       console.error("Error deleting category:", error)
       toast({
-        title: "Error",
-        description: "Failed to delete category",
+        title: t("common.error"),
+        description: t("categories.failedToDelete"),
         variant: "destructive",
       })
     }
@@ -128,12 +130,12 @@ export default function CategoriesPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
-            <p className="text-muted-foreground">Manage your expense categories</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t("categories.title")}</h1>
+            <p className="text-muted-foreground">{t("categories.subtitle")}</p>
           </div>
         </div>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading categories...</p>
+          <p className="text-muted-foreground">{t("categories.loadingCategories")}</p>
         </div>
       </div>
     )
@@ -143,8 +145,8 @@ export default function CategoriesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
-          <p className="text-muted-foreground">Manage your expense categories</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("categories.title")}</h1>
+          <p className="text-muted-foreground">{t("categories.subtitle")}</p>
         </div>
         <CategoryDialog
           onSubmit={handleCreateCategory}
@@ -155,9 +157,9 @@ export default function CategoriesPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between sm:items-center">
-            <CardTitle>All Categories</CardTitle>
+            <CardTitle>{t("categories.allCategories")}</CardTitle>
             <div className="mt-2 sm:mt-0 relative w-full sm:w-64">
-              <Input type="search" placeholder="Search categories..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <Input type="search" placeholder={t("categories.searchPlaceholder")} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
           </div>
         </CardHeader>
@@ -166,19 +168,19 @@ export default function CategoriesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Transactions</TableHead>
-                  <TableHead>Budget</TableHead>
-                  <TableHead>Spent</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("common.category")}</TableHead>
+                  <TableHead>{t("categories.transactions")}</TableHead>
+                  <TableHead>{t("categories.budget")}</TableHead>
+                  <TableHead>{t("categories.spent")}</TableHead>
+                  <TableHead>{t("categories.progress")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCategories.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      {searchTerm ? "No categories found" : "No categories yet"}
+                      {searchTerm ? t("categories.noCategoriesFound") : t("categories.noCategoriesYet")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -204,29 +206,29 @@ export default function CategoriesPage() {
                           <div className="flex justify-end gap-2">
                             <Button variant="ghost" size="icon" onClick={() => handleEditClick(category)}>
                               <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
+                              <span className="sr-only">{t("common.edit")}</span>
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="ghost" size="icon">
                                   <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Delete</span>
+                                  <span className="sr-only">{t("common.delete")}</span>
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                                  <AlertDialogTitle>{t("categories.deleteCategory")}</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Are you sure you want to delete &quot;{category.name}&quot;? This action cannot be undone.
+                                    {t("categories.deleteConfirmation", { name: category.name })}
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                                   <AlertDialogAction
                                     onClick={() => handleDeleteCategory(category)}
                                     className="bg-red-600 hover:bg-red-700"
                                   >
-                                    Delete
+                                    {t("common.delete")}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>

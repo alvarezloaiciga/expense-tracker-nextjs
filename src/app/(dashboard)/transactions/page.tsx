@@ -22,6 +22,7 @@ import { useSettings } from "@/hooks/useSettings"
 import { useAuth } from "@/hooks/useAuth0"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function TransactionsPage() {
   const router = useRouter()
@@ -29,6 +30,7 @@ export default function TransactionsPage() {
   const isMountedRef = useRef(false)
   const [isOnTransactionsPage, setIsOnTransactionsPage] = useState(false)
   const { isLoading, getAccessToken } = useAuth()
+  const { t } = useTranslation()
 
   // Local state for all filters/search/pagination
   const [searchTerm, setSearchTerm] = useState("")
@@ -280,14 +282,14 @@ export default function TransactionsPage() {
       }, accessToken)
       setTransactions(prev => [newTransaction, ...prev])
       toast({
-        title: "Success",
-        description: "Transaction created successfully",
+        title: t("common.success"),
+        description: t("transactions.transactionCreated"),
       })
     } catch (error) {
       console.error("Error creating transaction:", error)
       toast({
-        title: "Error",
-        description: "Failed to create transaction",
+        title: t("common.error"),
+        description: t("transactions.failedToCreate"),
         variant: "destructive",
       })
       throw error
@@ -310,14 +312,14 @@ export default function TransactionsPage() {
       setEditingTransaction(undefined)
       setEditDialogOpen(false)
       toast({
-        title: "Success",
-        description: "Transaction updated successfully",
+        title: t("common.success"),
+        description: t("transactions.transactionUpdated"),
       })
     } catch (error) {
       console.error("Error updating transaction:", error)
       toast({
-        title: "Error",
-        description: "Failed to update transaction",
+        title: t("common.error"),
+        description: t("transactions.failedToUpdate"),
         variant: "destructive",
       })
       throw error
@@ -330,14 +332,14 @@ export default function TransactionsPage() {
       await deleteTransaction(transaction.id, accessToken)
       setTransactions(prev => prev.filter(t => t.id !== transaction.id))
       toast({
-        title: "Success",
-        description: "Transaction deleted successfully",
+        title: t("common.success"),
+        description: t("transactions.transactionDeleted"),
       })
     } catch (error) {
       console.error("Error deleting transaction:", error)
       toast({
-        title: "Error",
-        description: "Failed to delete transaction",
+        title: t("common.error"),
+        description: t("transactions.failedToDelete"),
         variant: "destructive",
       })
     }
@@ -349,9 +351,9 @@ export default function TransactionsPage() {
   }
 
   const getCategoryName = (categoryId?: number) => {
-    if (!categoryId) return "No Category"
+    if (!categoryId) return t("transactions.noCategory")
     const category = categories.find(c => c.id === categoryId)
-    return category?.name || "Unknown Category"
+    return category?.name || t("transactions.unknownCategory")
   }
 
   const getCategoryColor = (categoryId?: number) => {
@@ -362,7 +364,7 @@ export default function TransactionsPage() {
 
   const getCardName = (cardId: number) => {
     const card = creditCards.find(c => c.id === cardId)
-    return card?.name || "Unknown Card"
+    return card?.name || t("transactions.unknownCard")
   }
 
   const gmailInstructions = (
@@ -372,29 +374,12 @@ export default function TransactionsPage() {
         download
         className="inline-block mb-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
       >
-        Download Filters
+        {t("transactions.gmailFilters.downloadFilters")}
       </a>
       <ol className="list-decimal list-inside space-y-1">
-        <li>
-          <b>Download</b> the mail filters file from this page.
-        </li>
-        <li>
-          Go to your {" "}
-          <a
-            href="https://mail.google.com/mail/u/0/#settings/filters"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline text-blue-700"
-          >
-            Gmail Filters Settings
-          </a>.
-        </li>
-        <li>
-          Click <b>Import Filters</b> and select the file you downloaded.
-        </li>
-        <li>
-          Click <b>Import</b> to finish adding the filters to your Gmail account.
-        </li>
+        {t("transactions.gmailFilters.instructions").map((instruction: string, index: number) => (
+          <li key={index} dangerouslySetInnerHTML={{ __html: instruction }} />
+        ))}
       </ol>
     </div>
   );
@@ -412,12 +397,12 @@ export default function TransactionsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-muted-foreground">View and manage your transaction history</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("transactions.title")}</h1>
+          <p className="text-muted-foreground">{t("transactions.subtitle")}</p>
         </div>
         <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-2">
           <Button variant="outline" size="sm">
-            Export CSV
+            {t("transactions.exportCsv")}
           </Button>
           <TransactionDialog
             categories={categories}
@@ -430,13 +415,13 @@ export default function TransactionsPage() {
 
       {!loading && (
         transactions.length === 0 ? (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">
-            <h2 className="font-semibold mb-2">How to Import Mail Filters into Gmail</h2>
-            {gmailInstructions}
-          </div>
+                  <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">
+          <h2 className="font-semibold mb-2">{t("transactions.gmailFilters.title")}</h2>
+          {gmailInstructions}
+        </div>
         ) : (
-          <div className="flex items-center mb-4">
-            <span className="mr-2 font-medium">Need help importing mail filters?</span>
+                  <div className="flex items-center mb-4">
+          <span className="mr-2 font-medium">{t("transactions.gmailFilters.needHelp")}</span>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -444,10 +429,10 @@ export default function TransactionsPage() {
                     <Info className="h-5 w-5 text-blue-700" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <h2 className="font-semibold mb-2">How to Import Mail Filters into Gmail</h2>
-                  {gmailInstructions}
-                </TooltipContent>
+                              <TooltipContent side="bottom" className="max-w-xs">
+                <h2 className="font-semibold mb-2">{t("transactions.gmailFilters.title")}</h2>
+                {gmailInstructions}
+              </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -461,7 +446,7 @@ export default function TransactionsPage() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input 
                 type="search" 
-                placeholder="Search transactions..." 
+                placeholder={t("transactions.searchPlaceholder")} 
                 className="w-full pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -473,8 +458,8 @@ export default function TransactionsPage() {
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All Categories">All Categories</SelectItem>
-                  <SelectItem value="Uncategorized">Uncategorized</SelectItem>
+                  <SelectItem value="All Categories">{t("transactions.allCategories")}</SelectItem>
+                  <SelectItem value="Uncategorized">{t("transactions.uncategorized")}</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.name}>
                       <div className="flex items-center gap-2">
@@ -494,7 +479,7 @@ export default function TransactionsPage() {
                   <SelectValue placeholder="Card" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All Cards">All Cards</SelectItem>
+                  <SelectItem value="All Cards">{t("transactions.allCards")}</SelectItem>
                   {creditCards.map((card) => (
                     <SelectItem key={card.id} value={card.name}>
                       {card.name} - {card.last_four_digits}
@@ -507,15 +492,15 @@ export default function TransactionsPage() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10">
                     <Filter className="mr-2 h-4 w-4" />
-                    {selectedDateRange === "All" ? "Date Range" : selectedDateRange}
+                    {selectedDateRange === "All" ? t("transactions.dateRange") : selectedDateRange}
                     <ChevronDown className="ml-2 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setSelectedDateRange("This Week")}>This Week</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedDateRange("This Month")}>This Month</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedDateRange("Last Month")}>Last Month</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedDateRange("All")}>All Time</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedDateRange("This Week")}>{t("transactions.thisWeek")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedDateRange("This Month")}>{t("transactions.thisMonth")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedDateRange("Last Month")}>{t("transactions.lastMonth")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedDateRange("All")}>{t("transactions.allTime")}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -526,28 +511,28 @@ export default function TransactionsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Merchant</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Card</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("common.date")}</TableHead>
+                  <TableHead>{t("common.merchant")}</TableHead>
+                  <TableHead>{t("common.category")}</TableHead>
+                  <TableHead>{t("common.card")}</TableHead>
+                  <TableHead>{t("common.amount")}</TableHead>
+                  <TableHead>{t("common.type")}</TableHead>
+                  <TableHead className="text-right">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      Loading transactions...
+                      {t("transactions.loadingTransactions")}
                     </TableCell>
                   </TableRow>
                 ) : transactions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground">
                       {searchTerm || selectedCategory !== "All Categories" || selectedCard !== "All Cards" 
-                        ? "No transactions found" 
-                        : "No transactions yet"}
+                        ? t("transactions.noTransactionsFound") 
+                        : t("transactions.noTransactions")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -582,26 +567,26 @@ export default function TransactionsPage() {
                           )}
                           {transaction.refund_amount && (
                             <div className="text-sm text-green-600 font-medium">
-                              Refund: {getDisplayRefundAmount(transaction)}
+                              {t("transactions.refund")}: {getDisplayRefundAmount(transaction)}
                             </div>
                           )}
                           {transaction.refunded_at && (
                             <div className="text-xs text-muted-foreground">
-                              Refunded: {format(new Date(transaction.refunded_at), "MMM dd, yyyy")}
+                              {t("transactions.refunded")}: {format(new Date(transaction.refunded_at), "MMM dd, yyyy")}
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={transaction.transaction_type === "EXPENSE" ? "destructive" : "default"}>
-                          {transaction.transaction_type}
+                          {transaction.transaction_type === "EXPENSE" ? t("transactions.expense") : t("transactions.income")}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="ghost" size="icon">
                             <Eye className="h-4 w-4" />
-                            <span className="sr-only">View</span>
+                            <span className="sr-only">{t("common.view")}</span>
                           </Button>
                           <Button
                             variant="ghost"
@@ -609,29 +594,29 @@ export default function TransactionsPage() {
                             onClick={() => handleEditClick(transaction)}
                           >
                             <Edit className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
+                            <span className="sr-only">{t("common.edit")}</span>
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon">
                                 <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete</span>
+                                <span className="sr-only">{t("common.delete")}</span>
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete this transaction? This action cannot be undone.
-                                </AlertDialogDescription>
+                                                            <AlertDialogTitle>{t("transactions.deleteTransaction")}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {t("transactions.deleteConfirmation")}
+                            </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => handleDeleteTransaction(transaction)}
                                   className="bg-red-600 hover:bg-red-700"
                                 >
-                                  Delete
+                                  {t("common.delete")}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

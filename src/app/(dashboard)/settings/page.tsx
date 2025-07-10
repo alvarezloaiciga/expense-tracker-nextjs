@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useSettings } from "@/hooks/useSettings"
+import { useTranslation } from "@/hooks/useTranslation"
 import { CURRENCIES, type CurrencyCode } from "@/lib/currency"
 import { useTheme } from "next-themes"
 import { useToast } from "@/../../hooks/use-toast"
@@ -15,6 +16,7 @@ export default function SettingsPage() {
   const { settings, isLoading, updateSettings } = useSettings()
   const { setTheme } = useTheme()
   const { toast } = useToast()
+  const { t } = useTranslation()
   const [isUpdating, setIsUpdating] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -42,13 +44,13 @@ export default function SettingsPage() {
       })
       setTheme(formData.preferred_theme)
       toast({
-        title: "Success",
-        description: "Settings updated successfully",
+        title: t("common.success"),
+        description: t("settings.updatedSuccessfully"),
       })
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update settings",
+        title: t("common.error"),
+        description: t("settings.failedToUpdate"),
         variant: "destructive",
       })
       console.error("Failed to update settings:", error)
@@ -61,12 +63,12 @@ export default function SettingsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground">Manage your account preferences and settings</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("settings.title")}</h1>
+          <p className="text-muted-foreground">{t("settings.subtitle")}</p>
         </div>
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            Loading settings...
+            {t("settings.loadingSettings")}
           </CardContent>
         </Card>
       </div>
@@ -76,27 +78,27 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your account preferences and settings</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("settings.title")}</h1>
+        <p className="text-muted-foreground">{t("settings.subtitle")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>User Preferences</CardTitle>
+          <CardTitle>{t("settings.userPreferences")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Display Name</Label>
+            <Label htmlFor="name">{t("settings.displayName")}</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Enter your display name"
+              placeholder={t("settings.enterDisplayName")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="currency">Default Currency</Label>
+            <Label htmlFor="currency">{t("settings.defaultCurrency")}</Label>
             <Select
               value={formData.default_currency}
               onValueChange={(value) => setFormData({ ...formData, default_currency: value as CurrencyCode })}
@@ -118,7 +120,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="theme">Preferred Theme</Label>
+            <Label htmlFor="theme">{t("settings.preferredTheme")}</Label>
             <Select
               value={formData.preferred_theme}
               onValueChange={(value) => setFormData({ ...formData, preferred_theme: value })}
@@ -127,25 +129,25 @@ export default function SettingsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System</SelectItem>
+                <SelectItem value="light">{t("settings.light")}</SelectItem>
+                <SelectItem value="dark">{t("settings.dark")}</SelectItem>
+                <SelectItem value="system">{t("settings.system")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <Button onClick={handleSave} disabled={isUpdating} className="mt-4">
-            {isUpdating ? "Saving..." : "Save Settings"}
+            {isUpdating ? t("settings.saving") : t("settings.saveSettings")}
           </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Account Settings</CardTitle>
+          <CardTitle>{t("settings.accountSettings")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Profile, notifications, and security settings coming soon...</p>
+          <p className="text-muted-foreground">{t("settings.comingSoon")}</p>
         </CardContent>
       </Card>
     </div>

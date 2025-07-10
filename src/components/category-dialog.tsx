@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Plus, Edit } from "lucide-react"
+import { useTranslation } from "@/hooks/useTranslation"
 import type { Category } from "@/types"
 
 const categorySchema = z.object({
@@ -34,6 +35,7 @@ export function CategoryDialog({ category, onSubmit, trigger, mode = "create", o
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen
   const setOpen = controlledOnOpenChange || setInternalOpen
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { t } = useTranslation()
 
   const {
     register,
@@ -83,12 +85,12 @@ export function CategoryDialog({ category, onSubmit, trigger, mode = "create", o
 
   const defaultTrigger = mode === "create" ? (
     <Button>
-      <Plus className="mr-2 h-4 w-4" /> Add Category
+      <Plus className="mr-2 h-4 w-4" /> {t("categoryDialog.addCategory")}
     </Button>
   ) : (
     <Button variant="ghost" size="icon">
       <Edit className="h-4 w-4" />
-      <span className="sr-only">Edit</span>
+      <span className="sr-only">{t("common.edit")}</span>
     </Button>
   )
 
@@ -100,16 +102,16 @@ export function CategoryDialog({ category, onSubmit, trigger, mode = "create", o
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {mode === "create" ? "Create Category" : "Edit Category"}
+            {mode === "create" ? t("categoryDialog.createCategory") : t("categoryDialog.editCategory")}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t("categoryDialog.name")}</Label>
             <Input
               id="name"
               {...register("name")}
-              placeholder="Enter category name"
+              placeholder={t("categoryDialog.enterCategoryName")}
             />
             {errors.name && (
               <p className="text-sm text-red-500">{errors.name.message}</p>
@@ -117,14 +119,14 @@ export function CategoryDialog({ category, onSubmit, trigger, mode = "create", o
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="budget">Budget</Label>
+            <Label htmlFor="budget">{t("categoryDialog.budget")}</Label>
             <Input
               id="budget"
               type="number"
               step="0.01"
               min="0"
               {...register("budget", { valueAsNumber: true })}
-              placeholder="Enter budget (e.g. 500)"
+              placeholder={t("categoryDialog.enterBudget")}
             />
             {errors.budget && (
               <p className="text-sm text-red-500">{errors.budget.message}</p>
@@ -134,7 +136,7 @@ export function CategoryDialog({ category, onSubmit, trigger, mode = "create", o
           <ColorPicker
             value={currentColor}
             onChange={handleColorChange}
-            label="Color"
+            label={t("categoryDialog.color")}
           />
           {errors.color && (
             <p className="text-sm text-red-500">{errors.color.message}</p>
@@ -147,10 +149,10 @@ export function CategoryDialog({ category, onSubmit, trigger, mode = "create", o
               onClick={() => setOpen(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : mode === "create" ? "Create" : "Save"}
+              {isSubmitting ? t("categoryDialog.saving") : mode === "create" ? t("categoryDialog.create") : t("categoryDialog.save")}
             </Button>
           </div>
         </form>

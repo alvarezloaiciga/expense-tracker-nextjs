@@ -6,37 +6,39 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
+import { LocaleSwitcher } from "@/components/locale-switcher"
 import { BarChart3, CreditCard, FileText, Home, Settings, Tag, Menu, X, LogOut, User } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth0"
+import { useTranslation } from "@/hooks/useTranslation"
 
 const navItems = [
   {
-    name: "Dashboard",
+    name: "sidebar.dashboard",
     href: "/dashboard",
     icon: Home,
   },
   {
-    name: "Transactions",
+    name: "sidebar.transactions",
     href: "/transactions",
     icon: CreditCard,
   },
   {
-    name: "Categories",
+    name: "sidebar.categories",
     href: "/categories",
     icon: Tag,
   },
   {
-    name: "Credit Cards",
+    name: "sidebar.creditCards",
     href: "/credit-cards",
     icon: CreditCard,
   },
   {
-    name: "Analytics",
+    name: "sidebar.analytics",
     href: "/analytics",
     icon: BarChart3,
   },
   {
-    name: "Settings",
+    name: "sidebar.settings",
     href: "/settings",
     icon: Settings,
   },
@@ -46,6 +48,7 @@ export default function Sidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const { user, logout, isLoading, isAuthenticated } = useAuth()
+  const { t } = useTranslation()
 
   return (
     <>
@@ -98,19 +101,19 @@ export default function Sidebar() {
                 )}
               >
                 <item.icon className="mr-3 h-5 w-5" />
-                {item.name}
+                {t(item.name)}
               </Link>
             ))}
           </nav>
 
           {/* User section */}
           <div className="border-t p-4 space-y-4">
-            <div className="hidden md:block">
+            <div className="flex flex-row items-center gap-2 ms-3">
               <ModeToggle />
+              <LocaleSwitcher />
             </div>
-            
             {!isLoading && isAuthenticated && user && (
-              <div className="space-y-3">
+              <div className="space-y-3 w-full">
                 <div className="flex items-center space-x-3 px-2">
                   <div className="flex-shrink-0">
                     {user.picture ? (
@@ -127,14 +130,13 @@ export default function Sidebar() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
-                      {user.name || user.email || 'User'}
+                      {user.name || user.email || t('sidebar.user')}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {user.email}
                     </p>
                   </div>
                 </div>
-                
                 <Button
                   variant="ghost"
                   size="sm"
@@ -142,13 +144,12 @@ export default function Sidebar() {
                   className="w-full justify-start text-muted-foreground hover:text-foreground"
                 >
                   <LogOut className="mr-3 h-4 w-4" />
-                  Sign out
+                  {t('sidebar.signOut')}
                 </Button>
               </div>
             )}
-
             {!isLoading && !isAuthenticated && (
-              <div className="space-y-3">
+              <div className="space-y-3 w-full">
                 <div className="flex items-center space-x-3 px-2">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
@@ -157,14 +158,13 @@ export default function Sidebar() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-muted-foreground">
-                      Not signed in
+                      {t('sidebar.notSignedIn')}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Please log in to continue
+                      {t('sidebar.pleaseLogin')}
                     </p>
                   </div>
                 </div>
-                
                 <Link href="/">
                   <Button
                     variant="ghost"
@@ -172,7 +172,7 @@ export default function Sidebar() {
                     className="w-full justify-start text-muted-foreground hover:text-foreground"
                   >
                     <LogOut className="mr-3 h-4 w-4" />
-                    Sign in
+                    {t('sidebar.signIn')}
                   </Button>
                 </Link>
               </div>

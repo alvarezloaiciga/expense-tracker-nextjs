@@ -14,6 +14,7 @@ import { getDashboardStats } from "@/services/api"
 import { useSettings } from "@/hooks/useSettings"
 import { useAuth } from "@/hooks/useAuth0"
 import type { DashboardStats } from "@/types"
+import { useTranslation } from "@/hooks/useTranslation"
 
 function getDateRangeForTab(tab: string): { from: string; to: string } {
   const now = new Date()
@@ -38,6 +39,7 @@ function getDateRangeForTab(tab: string): { from: string; to: string } {
 export default function Dashboard() {
   const { settings } = useSettings()
   const { getAccessToken } = useAuth()
+  const { t } = useTranslation()
   const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>(settings.default_currency as CurrencyCode)
   const [tab, setTab] = useState("30days")
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -77,34 +79,34 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Your financial overview and insights</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.title")}</h1>
+          <p className="text-muted-foreground">{t("dashboard.subtitle")}</p>
         </div>
         <div className="flex gap-2">
           {showCurrencyToggle && (
             <CurrencyToggle currentCurrency={displayCurrency} onCurrencyChange={setDisplayCurrency} />
           )}
-          <PdfExport elementId="dashboard-content" fileName="finance-dashboard.pdf" />
+          {/* <PdfExport elementId="dashboard-content" fileName="finance-dashboard.pdf" buttonText={t("dashboard.exportPdf")} /> */}
         </div>
       </div>
 
       <div id="dashboard-content" className="space-y-6">
         <Tabs value={tab} onValueChange={setTab} defaultValue="30days">
           <TabsList>
-            <TabsTrigger value="7days">Last 7 days</TabsTrigger>
-            <TabsTrigger value="30days">Last 30 days</TabsTrigger>
-            <TabsTrigger value="custom" disabled>Custom</TabsTrigger>
+            <TabsTrigger value="7days">{t("dashboard.last7days")}</TabsTrigger>
+            <TabsTrigger value="30days">{t("dashboard.last30days")}</TabsTrigger>
+            <TabsTrigger value="custom" disabled>{t("dashboard.custom")}</TabsTrigger>
           </TabsList>
           {(tab === "7days" || tab === "30days") && (
             <TabsContent value={tab} className="space-y-4">
               {loading ? (
-                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+                <div className="text-center py-8 text-muted-foreground">{t("common.loading")}</div>
               ) : stats && (
                 <>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                     <Card className="col-span-4">
                       <CardHeader>
-                        <CardTitle>Daily Spending Trend</CardTitle>
+                        <CardTitle>{t("dashboard.dailySpendingTrend")}</CardTitle>
                       </CardHeader>
                       <CardContent className="h-[300px]">
                         <DailySpendingTrend data={stats.daily_spending_trend} currency={displayCurrency} />
@@ -112,7 +114,7 @@ export default function Dashboard() {
                     </Card>
                     <Card className="col-span-3">
                       <CardHeader>
-                        <CardTitle>Spending by Category</CardTitle>
+                        <CardTitle>{t("dashboard.spendingByCategory")}</CardTitle>
                       </CardHeader>
                       <CardContent className="h-[300px]">
                         <SpendingByCategory data={stats.spending_by_category} currency={displayCurrency} />
@@ -121,7 +123,7 @@ export default function Dashboard() {
                   </div>
                   <Card>
                     <CardHeader>
-                      <CardTitle>Top Vendors</CardTitle>
+                      <CardTitle>{t("dashboard.topVendors")}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <TopVendors data={stats.top_vendors} currency={displayCurrency} />
@@ -132,23 +134,23 @@ export default function Dashboard() {
             </TabsContent>
           )}
           <TabsContent value="custom" className="space-y-4">
-            <div className="text-center py-8 text-muted-foreground">Custom date range coming soon…</div>
+            <div className="text-center py-8 text-muted-foreground">{t("dashboard.customComingSoon")}</div>
           </TabsContent>
         </Tabs>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {loading || !stats ? (
             <>
-              <Card><CardContent className="py-8 text-center text-muted-foreground">Loading…</CardContent></Card>
-              <Card><CardContent className="py-8 text-center text-muted-foreground">Loading…</CardContent></Card>
-              <Card><CardContent className="py-8 text-center text-muted-foreground">Loading…</CardContent></Card>
-              <Card><CardContent className="py-8 text-center text-muted-foreground">Loading…</CardContent></Card>
+              <Card><CardContent className="py-8 text-center text-muted-foreground">{t("common.loading")}</CardContent></Card>
+              <Card><CardContent className="py-8 text-center text-muted-foreground">{t("common.loading")}</CardContent></Card>
+              <Card><CardContent className="py-8 text-center text-muted-foreground">{t("common.loading")}</CardContent></Card>
+              <Card><CardContent className="py-8 text-center text-muted-foreground">{t("common.loading")}</CardContent></Card>
             </>
           ) : (
             <>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Spending</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t("dashboard.totalSpending")}</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -162,13 +164,13 @@ export default function Dashboard() {
                       {stats.summary.trend.total_spending_pct_change > 0 ? '+' : ''}
                       {stats.summary.trend.total_spending_pct_change}%
                     </span>{' '}
-                    from last month
+                    {t("dashboard.fromLastMonth")}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Largest Category</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t("dashboard.largestCategory")}</CardTitle>
                   <ShoppingBag className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -183,7 +185,7 @@ export default function Dashboard() {
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Transactions</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t("dashboard.transactions")}</CardTitle>
                   <CreditCard className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -194,13 +196,13 @@ export default function Dashboard() {
                       {stats.summary.trend.transaction_count_pct_change > 0 ? '+' : ''}
                       {stats.summary.trend.transaction_count_pct_change}%
                     </span>{' '}
-                    from last month
+                    {t("dashboard.fromLastMonth")}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Average Transaction</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t("dashboard.averageTransaction")}</CardTitle>
                   <ArrowUpIcon className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -216,7 +218,7 @@ export default function Dashboard() {
                       {stats.summary.trend.average_transaction_pct_change > 0 ? '+' : ''}
                       {stats.summary.trend.average_transaction_pct_change}%
                     </span>{' '}
-                    from last month
+                    {t("dashboard.fromLastMonth")}
                   </p>
                 </CardContent>
               </Card>

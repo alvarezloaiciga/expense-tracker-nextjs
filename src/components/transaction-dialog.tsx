@@ -16,24 +16,23 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import type { Transaction, Category, CreditCard } from "@/types"
+import { useTranslation } from "@/hooks/useTranslation"
 
-const transactionSchema = z.object({
-  credit_card_id: z.number().min(1, "Credit card is required"),
-  category_id: z.number().optional(),
-  amount: z.string().min(1, "Amount is required").regex(/^\d+(\.\d{1,2})?$/, "Invalid amount format"),
-  currency: z.string().min(1, "Currency is required"),
-  reference_id: z.string().min(1, "Reference ID is required"),
-  merchant_name: z.string().min(1, "Merchant name is required"),
-  city: z.string().optional(),
-  country: z.string().optional(),
-  transaction_date: z.date({
-    required_error: "Transaction date is required",
-  }),
-  authorization_code: z.string().optional(),
-  transaction_type: z.enum(["EXPENSE", "INCOME"]),
-})
+// Schema will be created dynamically with translations
 
-type TransactionFormData = z.infer<typeof transactionSchema>
+type TransactionFormData = {
+  credit_card_id: number
+  category_id?: number
+  amount: string
+  currency: string
+  reference_id: string
+  merchant_name: string
+  city?: string
+  country?: string
+  transaction_date: Date
+  authorization_code?: string
+  transaction_type: "EXPENSE" | "INCOME"
+}
 
 interface TransactionDialogProps {
   transaction?: Transaction
@@ -98,6 +97,7 @@ export function TransactionDialog({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange
 }: TransactionDialogProps) {
+  const { t } = useTranslation()
   const [internalOpen, setInternalOpen] = useState(false)
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen
   const setOpen = controlledOnOpenChange || setInternalOpen
@@ -105,6 +105,23 @@ export function TransactionDialog({
   const [date, setDate] = useState<Date | undefined>(
     transaction?.transaction_date ? new Date(transaction.transaction_date) : new Date()
   )
+
+  // Create schema dynamically with translations
+  const transactionSchema = z.object({
+    credit_card_id: z.number().min(1, t("transactionDialog.creditCardRequired")),
+    category_id: z.number().optional(),
+    amount: z.string().min(1, t("transactionDialog.amountRequired")).regex(/^\d+(\.\d{1,2})?$/, t("transactionDialog.invalidAmount")),
+    currency: z.string().min(1, t("transactionDialog.currencyRequired")),
+    reference_id: z.string().min(1, t("transactionDialog.referenceIdRequired")),
+    merchant_name: z.string().min(1, t("transactionDialog.merchantNameRequired")),
+    city: z.string().optional(),
+    country: z.string().optional(),
+    transaction_date: z.date({
+      required_error: t("transactionDialog.transactionDateRequired"),
+    }),
+    authorization_code: z.string().optional(),
+    transaction_type: z.enum(["EXPENSE", "INCOME"]),
+  })
 
   const {
     register,
@@ -188,12 +205,12 @@ export function TransactionDialog({
 
   const defaultTrigger = mode === "create" ? (
     <Button>
-      <Plus className="mr-2 h-4 w-4" /> Add Transaction
+      <Plus className="mr-2 h-4 w-4" /> {t("transactions.addTransaction")}
     </Button>
   ) : (
     <Button variant="ghost" size="icon">
       <Edit className="h-4 w-4" />
-      <span className="sr-only">Edit</span>
+      <span className="sr-only">{t("common.edit")}</span>
     </Button>
   )
 
@@ -208,17 +225,17 @@ export function TransactionDialog({
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === "create" ? "Create Transaction" : "Edit Transaction"}
+            {mode === "create" ? t("transactionDialog.createTitle") : t("transactionDialog.editTitle")}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Credit Card */}
             <div className="space-y-2">
-              <Label htmlFor="credit_card_id">Credit Card *</Label>
+              <Label htmlFor="credit_card_id">{t("transactionDialog.creditCard")} *</Label>
               <Select value={watchedCreditCardId.toString()} onValueChange={(value) => setValue("credit_card_id", parseInt(value))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select credit card" />
+                  <SelectValue placeholder={t("transactionDialog.creditCard")} />
                 </SelectTrigger>
                 <SelectContent>
                   {creditCards.map((card) => (
@@ -240,13 +257,13 @@ export function TransactionDialog({
 
             {/* Category */}
             <div className="space-y-2">
-              <Label htmlFor="category_id">Category</Label>
+              <Label htmlFor="category_id">{t("transactionDialog.category")}</Label>
               <Select value={watchedCategoryId?.toString() || "none"} onValueChange={(value) => setValue("category_id", value === "none" ? undefined : parseInt(value))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category (optional)" />
+                  <SelectValue placeholder={t("transactionDialog.category")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No Category</SelectItem>
+                  <SelectItem value="none">{t("transactions.noCategory")}</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       <div className="flex items-center gap-2">
@@ -264,7 +281,7 @@ export function TransactionDialog({
 
             {/* Amount */}
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount *</Label>
+              <Label htmlFor="amount">{t("transactionDialog.amount")} *</Label>
               <Input
                 id="amount"
                 {...register("amount")}
@@ -278,10 +295,10 @@ export function TransactionDialog({
 
             {/* Currency */}
             <div className="space-y-2">
-              <Label htmlFor="currency">Currency *</Label>
+              <Label htmlFor="currency">{t("transactionDialog.currency")} *</Label>
               <Select value={watch("currency")} onValueChange={(value) => setValue("currency", value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select currency" />
+                  <SelectValue placeholder={t("transactionDialog.selectCurrency")} />
                 </SelectTrigger>
                 <SelectContent>
                   {currencies.map((currency) => {
@@ -295,7 +312,7 @@ export function TransactionDialog({
                           <span>{currency}</span>
                           {isCardCurrency && (
                             <span className="text-xs text-muted-foreground">
-                              {currency === selectedCard.primary_currency ? '(Primary)' : '(Secondary)'}
+                              {currency === selectedCard.primary_currency ? `(${t("common.primary")})` : `(${t("common.secondary")})`}
                             </span>
                           )}
                         </div>
@@ -306,7 +323,7 @@ export function TransactionDialog({
               </Select>
               {selectedCard && (
                 <p className="text-xs text-muted-foreground">
-                  Card currencies: {selectedCard.primary_currency}
+                  {t("transactionDialog.cardCurrencies")}: {selectedCard.primary_currency}
                   {selectedCard.secondary_currency && `, ${selectedCard.secondary_currency}`}
                 </p>
               )}
@@ -317,11 +334,11 @@ export function TransactionDialog({
 
             {/* Reference ID */}
             <div className="space-y-2">
-              <Label htmlFor="reference_id">Reference ID *</Label>
+              <Label htmlFor="reference_id">{t("transactionDialog.referenceId")} *</Label>
               <Input
                 id="reference_id"
                 {...register("reference_id")}
-                placeholder="Transaction reference"
+                placeholder={t("transactionDialog.referenceId")}
               />
               {errors.reference_id && (
                 <p className="text-sm text-red-500">{errors.reference_id.message}</p>
@@ -330,14 +347,14 @@ export function TransactionDialog({
 
             {/* Transaction Type */}
             <div className="space-y-2">
-              <Label htmlFor="transaction_type">Transaction Type *</Label>
+              <Label htmlFor="transaction_type">{t("transactionDialog.transactionType")} *</Label>
               <Select value={watch("transaction_type")} onValueChange={(value: "EXPENSE" | "INCOME") => setValue("transaction_type", value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t("transactionDialog.transactionType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EXPENSE">Expense</SelectItem>
-                  <SelectItem value="INCOME">Income</SelectItem>
+                  <SelectItem value="EXPENSE">{t("transactionDialog.expense")}</SelectItem>
+                  <SelectItem value="INCOME">{t("transactionDialog.income")}</SelectItem>
                 </SelectContent>
               </Select>
               {errors.transaction_type && (
@@ -348,11 +365,11 @@ export function TransactionDialog({
 
           {/* Merchant Name */}
           <div className="space-y-2">
-            <Label htmlFor="merchant_name">Merchant Name *</Label>
+            <Label htmlFor="merchant_name">{t("transactionDialog.merchantName")} *</Label>
             <Input
               id="merchant_name"
               {...register("merchant_name")}
-              placeholder="Merchant or vendor name"
+              placeholder={t("transactionDialog.merchantName")}
             />
             {errors.merchant_name && (
               <p className="text-sm text-red-500">{errors.merchant_name.message}</p>
@@ -362,28 +379,28 @@ export function TransactionDialog({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* City */}
             <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
+              <Label htmlFor="city">{t("transactionDialog.city")}</Label>
               <Input
                 id="city"
                 {...register("city")}
-                placeholder="City"
+                placeholder={t("transactionDialog.city")}
               />
             </div>
 
             {/* Country */}
             <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
+              <Label htmlFor="country">{t("transactionDialog.country")}</Label>
               <Input
                 id="country"
                 {...register("country")}
-                placeholder="Country"
+                placeholder={t("transactionDialog.country")}
               />
             </div>
           </div>
 
           {/* Transaction Date */}
           <div className="space-y-2">
-            <Label>Transaction Date *</Label>
+            <Label>{t("transactionDialog.transactionDate")} *</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -394,7 +411,7 @@ export function TransactionDialog({
                   )}
                 >
                   <Calendar className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  {date ? format(date, "PPP") : <span>{t("transactionDialog.pickDate")}</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -413,11 +430,11 @@ export function TransactionDialog({
 
           {/* Authorization Code */}
           <div className="space-y-2">
-            <Label htmlFor="authorization_code">Authorization Code</Label>
+            <Label htmlFor="authorization_code">{t("transactionDialog.authorizationCode")}</Label>
             <Input
               id="authorization_code"
               {...register("authorization_code")}
-              placeholder="Authorization code (optional)"
+              placeholder={t("transactionDialog.authorizationCode")}
             />
           </div>
 
@@ -430,10 +447,10 @@ export function TransactionDialog({
               onClick={() => setOpen(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : mode === "create" ? "Create" : "Save"}
+              {isSubmitting ? t("transactionDialog.saving") : mode === "create" ? t("common.add") : t("common.save")}
             </Button>
           </div>
         </form>

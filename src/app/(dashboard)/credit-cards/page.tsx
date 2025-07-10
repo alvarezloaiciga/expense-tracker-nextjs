@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { formatCurrency, CURRENCIES, type CurrencyCode } from "@/lib/currency"
 import { useSettings } from "@/hooks/useSettings"
 import { useAuth } from "@/hooks/useAuth0"
+import { useTranslation } from "@/hooks/useTranslation"
 import api from '@/services/api'
 
 const BRANDS = [
@@ -33,6 +34,7 @@ export default function CreditCardsPage() {
   const queryClient = useQueryClient()
   const { settings } = useSettings()
   const { getAccessToken } = useAuth()
+  const { t } = useTranslation()
   const { data: cards = [], isLoading } = useQuery({
     queryKey: ["credit-cards"],
     queryFn: async () => {
@@ -112,11 +114,11 @@ export default function CreditCardsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Credit Cards</h1>
-          <p className="text-muted-foreground">Manage your credit cards</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("creditCards.title")}</h1>
+          <p className="text-muted-foreground">{t("creditCards.subtitle")}</p>
         </div>
         <Button onClick={openAdd} variant="default">
-          <Plus className="mr-2 h-4 w-4" /> Add Card
+          <Plus className="mr-2 h-4 w-4" /> {t("creditCards.addCard")}
         </Button>
       </div>
 
@@ -145,11 +147,11 @@ export default function CreditCardsPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Last 4</span>
+                  <span className="text-sm text-muted-foreground">{t("creditCards.last4")}</span>
                   <span className="font-mono">{card.last_four_digits}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Currencies</span>
+                  <span className="text-sm text-muted-foreground">{t("creditCards.currencies")}</span>
                   <span className="text-sm font-medium">
                     {CURRENCIES[card.primary_currency as CurrencyCode]?.symbol} {card.primary_currency}
                     {card.secondary_currency && (
@@ -160,7 +162,7 @@ export default function CreditCardsPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Total Expenses</span>
+                  <span className="text-sm text-muted-foreground">{t("creditCards.totalExpenses")}</span>
                   <span className="font-semibold flex flex-col items-end gap-0">
                     {Object.entries(card.expenses_by_currency).length > 0 ? (
                       Object.entries(card.expenses_by_currency).map(([currency, amount]) => (
@@ -181,18 +183,18 @@ export default function CreditCardsPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editCard ? "Edit Card" : "Add Card"}</DialogTitle>
+            <DialogTitle>{editCard ? t("creditCards.editCard") : t("creditCards.addCard")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t("creditCards.name")}</Label>
               <Input name="name" id="name" value={form.name || ""} onChange={handleFormChange} required />
             </div>
             <div>
-              <Label htmlFor="brand">Brand</Label>
+              <Label htmlFor="brand">{t("creditCards.brand")}</Label>
               <Select value={form.brand || ""} onValueChange={handleBrandChange} required>
                 <SelectTrigger id="brand">
-                  <SelectValue placeholder="Select a brand" />
+                  <SelectValue placeholder={t("creditCards.selectBrand")} />
                 </SelectTrigger>
                 <SelectContent>
                   {BRANDS.map((b) => (
@@ -204,14 +206,14 @@ export default function CreditCardsPage() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="last_four_digits">Last 4 Digits</Label>
+              <Label htmlFor="last_four_digits">{t("creditCards.last4Digits")}</Label>
               <Input name="last_four_digits" id="last_four_digits" value={form.last_four_digits || ""} maxLength={4} onChange={handleFormChange} required />
             </div>
             <div>
-              <Label htmlFor="primary_currency">Primary Currency</Label>
+              <Label htmlFor="primary_currency">{t("creditCards.primaryCurrency")}</Label>
               <Select value={form.primary_currency || ""} onValueChange={(value) => setForm((f) => ({ ...f, primary_currency: value }))} required>
                 <SelectTrigger id="primary_currency">
-                  <SelectValue placeholder="Select primary currency" />
+                  <SelectValue placeholder={t("creditCards.selectPrimaryCurrency")} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(CURRENCIES).map(([code, info]) => (
@@ -223,13 +225,13 @@ export default function CreditCardsPage() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="secondary_currency">Secondary Currency (Optional)</Label>
+              <Label htmlFor="secondary_currency">{t("creditCards.secondaryCurrency")}</Label>
               <Select value={form.secondary_currency || "none"} onValueChange={(value) => setForm((f) => ({ ...f, secondary_currency: value === "none" ? null : value }))}>
                 <SelectTrigger id="secondary_currency">
-                  <SelectValue placeholder="Select secondary currency (optional)" />
+                  <SelectValue placeholder={t("creditCards.selectSecondaryCurrency")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">{t("creditCards.none")}</SelectItem>
                   {Object.entries(CURRENCIES).map(([code, info]) => (
                     <SelectItem key={code} value={code}>
                       {info.symbol} {info.name} ({info.code})
@@ -240,10 +242,10 @@ export default function CreditCardsPage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={addOrEditMutation.isPending}>
-                {editCard ? "Save Changes" : "Add Card"}
+                {editCard ? t("creditCards.saveChanges") : t("creditCards.addCard")}
               </Button>
             </DialogFooter>
           </form>
@@ -254,15 +256,15 @@ export default function CreditCardsPage() {
       <Dialog open={!!deleteCard} onOpenChange={() => setDeleteCard(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Card</DialogTitle>
+            <DialogTitle>{t("creditCards.deleteCard")}</DialogTitle>
           </DialogHeader>
-          <p>Are you sure you want to delete <span className="font-semibold">{deleteCard?.name}</span>?</p>
+          <p>{t("creditCards.deleteConfirmation", { name: deleteCard?.name || "" })}</p>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setDeleteCard(null)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button type="button" variant="destructive" onClick={() => deleteCard && deleteMutation.mutate(deleteCard)}>
-              Delete
+              {t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

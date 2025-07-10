@@ -6,6 +6,7 @@ import { Providers } from '../lib/providers'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeInitializer } from '@/components/theme-initializer'
 import { Auth0ProviderWrapper } from '@/components/auth0-provider'
+import { LocaleProvider } from "@/contexts/LocaleContext";
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,16 +26,18 @@ export default function RootLayout({
       <body className={inter.className}>
         <Auth0ProviderWrapper>
           <Providers>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-              storageKey="finance-ai-theme"
-            >
-              <ThemeInitializer />
-              {children}
-            </ThemeProvider>
+            <LocaleProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+                storageKey="finance-ai-theme"
+              >
+                <ThemeInitializer />
+                {children}
+              </ThemeProvider>
+            </LocaleProvider>
           </Providers>
         </Auth0ProviderWrapper>
       </body>
